@@ -3,7 +3,7 @@
 
 # 打开 .gitignore 文件本身，以确保它被跟踪
 !.gitignore
-
+·
 # ******** 下面是跟踪 kernel/linux_drivers 目录的流程 ********
 # 1. 首先打开 kernel/linux_drivers 目录及其内容
 !kernel/
@@ -27,3 +27,4 @@
 # 打开 kernel/drivers/media/spi/ 目录
 !/kernel/drivers/media/spi/
 
+# test second commit
