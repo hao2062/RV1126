@@ -4,7 +4,7 @@
 # 打开 .gitignore 文件本身，以确保它被跟踪
 !.gitignore
 ·
-# ******** 下面是跟踪 kernel/linux_drivers 目录的流程 ********
+# 一、打开 kernel/linux_drivers 目录的流程 ******************
 # 1. 首先打开 kernel/linux_drivers 目录及其内容
 !kernel/
 
@@ -15,7 +15,7 @@
 !kernel/linux_drivers/
 # **********************************************************
 
-# ******** 下面是打开 kernel/drivers/media/spi 目录的流程（需要一级级地打开每个上级目录）********
+# 二、打开 kernel/drivers/media/spi 目录的流程（需要一级级地打开每个上级目录）********************
 # 打开 kernel/drivers/ 目录，再关掉 drivers 目录下的所有内容
 !kernel/drivers/
 /kernel/drivers/*
@@ -26,4 +26,9 @@
 
 # 打开 kernel/drivers/media/spi/ 目录
 !/kernel/drivers/media/spi/
+
+# 关掉 kernel/drivers/media/spi/ 目录，再打开电机相关的文件目录下的所有内容
+/kernel/drivers/media/spi/*
+!/kernel/drivers/media/spi/ms41908.c
+
 # ********************************************************************************************
