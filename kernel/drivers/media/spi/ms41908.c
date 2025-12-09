@@ -2805,3 +2805,5 @@ module_exit(motor_mod_exit);
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:motor");
 MODULE_AUTHOR("zefa.chen@rock-chips.com");
+
+

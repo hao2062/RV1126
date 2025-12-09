@@ -21,16 +21,12 @@
 # ==== TRACKED_DIRS_END ====
 
 # ==== TRACKED_FILES_BEGIN ====
+# BEGIN FILE: feature_test.sh
+!./
+/./*
+!feature_test.sh
+# END FILE: feature_test.sh
 
-
-
-# !kernel/
-# /kernel/*
-# !kernel/drivers/
-# /kernel/drivers/*
-# !kernel/drivers/media/
-# /kernel/drivers/media/*
-# !/kernel/drivers/media/spi/
 
 
 # # ********************************************************************************************
