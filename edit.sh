@@ -10,12 +10,9 @@ TRACKED_FILES_END="# ==== TRACKED_FILES_END ===="
 
 usage() {
   echo "用法:"
-  echo "  $0 add <path>            放开目录或文件（自动判定）"
-  echo "  $0 add-dir <dir>         放开目录"
-  echo "  $0 add-file <file>       放开单个文件"
-  echo "  $0 remove <path>         删除放开项（目录或文件）"
-  echo "  $0 list                  列出当前放开项"
-  echo "  $0 validate              检查重复规则"
+  echo "  $0 add <path>            跟踪目录或文件（自动判定）"
+  echo "  $0 remove <path>         删除跟踪项（目录或文件）"
+  echo "  $0 list                  列出当前跟踪项"
   exit 1
 }
 
@@ -47,22 +44,21 @@ insert_between_markers() {
   ' "$GITIGNORE" > "$GITIGNORE.tmp" && mv "$GITIGNORE.tmp" "$GITIGNORE"
 }
 
-# 删除标记段中的包含关键字的行块（按起止注释）
+# 删除标记段中的包含关键字的行块（BEGIN 到对应 END），使用 sed 以避免 awk 兼容问题
 delete_block_by_keyword() {
   local begin="$1"; local end="$2"; local keyword="$3"
-  awk -v begin="$begin" -v end="$end" -v keyword="$keyword" '
-    BEGIN {in=0; skip=0}
-    {
-      if ($0 == begin) {in=1; print; next}
-      if ($0 == end)   {in=0; skip=0; print; next}
-      if (in) {
-        if (index($0, keyword) != 0) {skip=1}
-        if (!skip) print
-        next
-      }
-      print
-    }
-  ' "$GITIGNORE" > "$GITIGNORE.tmp" && mv "$GITIGNORE.tmp" "$GITIGNORE"
+  # 关键字形如 "BEGIN DIR: kernel/drivers/media/spi" 或 "BEGIN FILE: path/to/file"
+  local endkw="${keyword/BEGIN /END }"
+
+  # 转义 sed 正则特殊字符与斜杠
+  local esc_begin esc_end esc_kw esc_endkw
+  esc_begin="$(printf '%s' "$begin"   | sed 's/[.[\*^$\\/]/\\&/g')"
+  esc_end="$(printf   '%s' "$end"     | sed 's/[.[\*^$\\/]/\\&/g')"
+  esc_kw="$(printf    '%s' "$keyword" | sed 's/[.[\*^$\\/]/\\&/g')"
+  esc_endkw="$(printf '%s' "$endkw"   | sed 's/[.[\*^$\\/]/\\&/g')"
+
+  # 仅在标记区间内，删除从 "# BEGIN ..." 到 "# END ..." 的块
+  sed -i "/^${esc_begin}\$/,/^${esc_end}\$/ { /# ${esc_kw}/,/^# ${esc_endkw}\$/ d }" "$GITIGNORE"
 }
 
 # 生成逐级路径数组
@@ -90,14 +86,16 @@ normalize_path() {
   echo "$p"
 }
 
-# 检查是否已存在 BEGIN 块（兼容 awk 实现）
+# 检查是否已存在 BEGIN 块（使用 sed+grep，避免 awk 兼容问题）
 exists_block() {
   local begin="$1"; local end="$2"; local keyword="$3"
-  awk -v b="$begin" -v e="$end" '
-    $0==b {in=1; next}
-    $0==e {in=0}
-    in    {print}
-  ' "$GITIGNORE" | grep -Fq "$keyword"
+  sed -n "/^${begin}\$/,/^${end}\$/p" "$GITIGNORE" | grep -Fq "$keyword"
+}
+
+# 判断标记区间内是否存在指定 BEGIN/END 块
+has_block() {
+  local begin="$1"; local end="$2"; local keyword="$3"
+  sed -n "/^${begin}\$/,/^${end}\$/p" "$GITIGNORE" | grep -Fq "# ${keyword}"
 }
 
 gen_dir_rules() {
@@ -137,13 +135,13 @@ add_dir() {
   ensure_markers
   local key="BEGIN DIR: $dir"
   if exists_block "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "$key"; then
-    echo "已存在目录放开项: $dir"
+    echo "已存在目录: $dir"
     return 0
   fi
   # 保证 END 行独立且块末尾换行
   local payload="# ${key}"$'\n'"$(gen_dir_rules "$dir")"$'\n'"# END DIR: $dir"$'\n'
   insert_between_markers "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "$payload"
-  echo "已放开目录: $dir"
+  echo "已跟踪目录: $dir"
 }
 
 add_file() {
@@ -151,13 +149,13 @@ add_file() {
   ensure_markers
   local key="BEGIN FILE: $file"
   if exists_block "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "$key"; then
-    echo "已存在文件放开项: $file"
+    echo "已存在文件: $file"
     return 0
   fi
   # 保证 END 行独立且块末尾换行
   local payload="# ${key}"$'\n'"$(gen_file_rules "$file")"$'\n'"# END FILE: $file"$'\n'
   insert_between_markers "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "$payload"
-  echo "已放开文件: $file"
+  echo "已跟踪文件: $file"
 }
 
 # 自动判定类型：dir 或 file
@@ -192,20 +190,46 @@ add_any() {
 remove_path() {
   local path="$(normalize_path "$1")"
   ensure_markers
-  delete_block_by_keyword "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "BEGIN DIR: $path"
-  delete_block_by_keyword "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "BEGIN FILE: $path"
-  echo "已尝试删除: $path"
+
+  local key_dir="BEGIN DIR: $path"
+  local key_file="BEGIN FILE: $path"
+
+  if has_block "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "$key_dir"; then
+    delete_block_by_keyword "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "$key_dir"
+    if has_block "$TRACKED_DIRS_BEGIN" "$TRACKED_DIRS_END" "$key_dir"; then
+      echo "删除失败: $path"
+      exit 1
+    else
+      echo "成功删除跟踪目录: $path"
+      exit 0
+    fi
+  fi
+
+  if has_block "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "$key_file"; then
+    delete_block_by_keyword "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "$key_file"
+    if has_block "$TRACKED_FILES_BEGIN" "$TRACKED_FILES_END" "$key_file"; then
+      echo "删除失败: $path"
+      exit 1
+    else
+      echo "成功删除跟踪文件: $path"
+      exit 0
+    fi
+  fi
+
+  echo "未找到跟踪文件: $path"
+  exit 1
 }
 
 list_items() {
-  echo "放开目录："
-  awk -v b="$TRACKED_DIRS_BEGIN" -v e="$TRACKED_DIRS_END" '
-    $0==b{in=1; next} $0==e{in=0} in && /# BEGIN DIR:/ {sub(/^# BEGIN DIR: /,"- /"); print}
-  ' "$GITIGNORE"
-  echo "放开文件："
-  awk -v b="$TRACKED_FILES_BEGIN" -v e="$TRACKED_FILES_END" '
-    $0==b{in=1; next} $0==e{in=0} in && /# BEGIN FILE:/ {sub(/^# BEGIN FILE: /,"- /"); print}
-  ' "$GITIGNORE"
+  echo "跟踪目录："
+  sed -n "/^${TRACKED_DIRS_BEGIN}\$/,/^${TRACKED_DIRS_END}\$/p" "$GITIGNORE" \
+    | grep -E "^# BEGIN DIR: " \
+    | sed 's/^# BEGIN DIR: /- /'
+
+  echo "跟踪文件："
+  sed -n "/^${TRACKED_FILES_BEGIN}\$/,/^${TRACKED_FILES_END}\$/p" "$GITIGNORE" \
+    | grep -E "^# BEGIN FILE: " \
+    | sed 's/^# BEGIN FILE: /- /'
 }
 
 validate() {

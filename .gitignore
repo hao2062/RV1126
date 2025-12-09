@@ -3,27 +3,24 @@
 
 # 2) 通用放开
 !.gitignore
-! edit.sh
+!edit.sh
 
 # 3) 放开清单（由脚本维护）
 # ==== TRACKED_DIRS_BEGIN ====
-# BEGIN DIR: kernel/drivers/media/spi
-!kernel/
-/kernel/*
-!kernel/drivers/
-/kernel/drivers/*
-!kernel/drivers/media/
-/kernel/drivers/media/*
-!kernel/drivers/media/spi/
-# END DIR: kernel/drivers/media/spi
+
+
+
+
+
+
+
+
 
 # 说明：edit.sh 逐级生成：!<level>/ 与 /<level>/*，最后 !<dir>/（不使用前导'/'）
 # （如需修正已生成的块，请先：./edit.sh remove <path> 再 ./edit.sh add <path>）
 # ==== TRACKED_DIRS_END ====
 
 # ==== TRACKED_FILES_BEGIN ====
-# 说明：edit.sh 对文件生成：!<level>/ 与 /<level>/*，最后 !<file>（不使用前导'/'）
-# ==== TRACKED_FILES_END ====
 
 
 
