@@ -26,5 +26,4 @@
 
 # 打开 kernel/drivers/media/spi/ 目录
 !/kernel/drivers/media/spi/
-
-# test second commit
+# ********************************************************************************************
