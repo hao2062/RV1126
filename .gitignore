@@ -24,11 +24,11 @@
 !kernel/drivers/media/
 /kernel/drivers/media/*
 
-# 打开 kernel/drivers/media/spi/ 目录
+# 打开 kernel/drivers/media/spi/ 目录，再关掉 spi 目录下的所有内容
 !/kernel/drivers/media/spi/
-
-# 关掉 kernel/drivers/media/spi/ 目录，再打开电机相关的文件目录下的所有内容
 /kernel/drivers/media/spi/*
+
+# 打开 kernel/drivers/media/spi/ms41908.c 文件
 !/kernel/drivers/media/spi/ms41908.c
 
 # ********************************************************************************************
