@@ -15,6 +15,24 @@ config VIDEO_MS41908
 	---help---
 	  Support motor driver By MS41908 for camera Lens.
 
+config VIDEO_MS41908_1
+	tristate "Relmon MS41908 motor driver"
+	depends on SPI && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	---help---
+	  Support motor driver By MS41908_1 for camera Lens.
+
+config VIDEO_MS41908_2
+	tristate "Relmon MS41908_2 motor driver"
+	depends on SPI && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	---help---
+	  Support motor driver By MS41908_2 for camera Lens.
+
+config VIDEO_MS41908_3
+	tristate "Relmon MS41908_3 motor driver"
+	depends on SPI && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	---help---
+	  Support motor driver By MS41908_3 for camera Lens.
+
 config VIDEO_ROCKCHIP_PREISP
 	tristate "Rockchip Image Signal Pre-processing driver"
 	depends on VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API && SPI_MASTER
