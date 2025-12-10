@@ -31,6 +31,8 @@
 # kernel/drivers/media/
 !kernel/drivers/media/
 /kernel/drivers/media/*
+# kernel/drivers/media/spi/
+!kernel/drivers/media/spi/
 # kernel/drivers/media/i2c/
 !kernel/drivers/media/i2c/
 /kernel/drivers/media/i2c/*

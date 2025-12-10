@@ -147,6 +147,23 @@ def list_tracked_items(lines):
                     reignores.add(lvl)
     return dirs, files, reignores
 
+# 新增：打印当前已跟踪的目录与文件（目录仅显示真正打开的：有 !dir/ 且无 /dir/*）
+def cmd_list():
+    if not os.path.isfile(GITIGNORE):
+        print(".gitignore 不存在: {}".format(GITIGNORE), file=sys.stderr)
+        sys.exit(1)
+    lines = read_lines(GITIGNORE)
+    lines = ensure_markers(lines)
+    dirs, files, reignores = list_tracked_items(lines)
+
+    opened_dirs = sorted(d for d in dirs if d not in reignores)
+    print("目录:")
+    for d in opened_dirs:
+        print(d + "/")
+    print("文件:")
+    for f in sorted(files):
+        print(f)
+
 def has_reignore(lines, b, e, d):
     # 是否存在 "/dir/*" 关闭行
     target = "/{}/*".format(d)
