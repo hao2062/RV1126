@@ -8,6 +8,8 @@
 # 3) 放开清单（由脚本维护）
 
 # ==== TRACKED_FILES_BEGIN ====
+# files/
+!files/
 # kernel/
 !kernel/
 /kernel/*
@@ -31,8 +33,6 @@
 # kernel/drivers/media/
 !kernel/drivers/media/
 /kernel/drivers/media/*
-# kernel/drivers/media/spi/
-!kernel/drivers/media/spi/
 # kernel/drivers/media/i2c/
 !kernel/drivers/media/i2c/
 /kernel/drivers/media/i2c/*
