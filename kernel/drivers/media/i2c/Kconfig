@@ -2054,6 +2054,12 @@ config VIDEO_MP6507
 	help
 	  This a driver used pwm to drive motor
 
+config VIDEO_IR6
+	tristate "IR6 motor driver for camera iris/focus/zoom"
+	depends on VIDEO_V4L2
+	help
+	  This a driver for IR6
+
 endmenu
 
 menu "Sensors used on soc_camera driver"

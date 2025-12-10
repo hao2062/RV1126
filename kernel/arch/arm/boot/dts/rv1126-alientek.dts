@@ -214,9 +214,10 @@
         };
     };
 
-    imx335: imx335@1a {
-        compatible = "sony,imx335";
-        reg = <0x1a>;
+    ir6: ir6@60 {
+        compatible = "uhdc,ir6";
+        reg = <0x60>;
+        // clocks = <&cru CLK_MIPICSI_OUT>;
         clocks = <&cru CLK_MIPICSI_OUT>;
         clock-names = "xvclk";
         power-domains = <&power RV1126_PD_VI>;
@@ -226,18 +227,24 @@
         dovdd-supply = <&vcc_dovdd>;
         dvdd-supply = <&vcc_dvdd>;
         pwdn-gpios = <&gpio1 RK_PD4 GPIO_ACTIVE_HIGH>;
-        reset-gpios = <&gpio4 RK_PA0 GPIO_ACTIVE_LOW>;
+        reset-gpios = <&gpio4 RK_PA0 GPIO_ACTIVE_HIGH>;
         rockchip,camera-module-index = <0>;
         rockchip,camera-module-facing = "front";
-        rockchip,camera-module-name = "MTV4-IR-E-P";
-        rockchip,camera-module-lens-name = "40IRC-4MP-F16";
+        rockchip,camera-module-name = "UHD099";
+        rockchip,camera-module-lens-name = "NIR-E-2M-F1-hdr2";
+        
+        // ir-cut = <&cam_ircut0>;
+        // flash-leds = <&flash_ir>;
+        // lens-focus = <&ms41908_1>;
         port {
             ucam_out1: endpoint {
                 remote-endpoint = <&mipi_in_ucam1>;
                 data-lanes = <1 2 3 4>;
             };
         };
+
     };
+
 };
 
 &i2c5 {
