@@ -38,6 +38,21 @@
 # kernel/drivers/media/
 !kernel/drivers/media/
 /kernel/drivers/media/*
+# kernel/drivers/media/spi/
+!kernel/drivers/media/spi/
+/kernel/drivers/media/spi/*
+# kernel/drivers/media/spi/Kconfig
+!kernel/drivers/media/spi/Kconfig
+# kernel/drivers/media/spi/Makefile
+!kernel/drivers/media/spi/Makefile
+# kernel/drivers/media/spi/zoom_mapping_table.h
+!kernel/drivers/media/spi/zoom_mapping_table.h
+# kernel/drivers/media/spi/ms41908_3.c
+!kernel/drivers/media/spi/ms41908_3.c
+# kernel/drivers/media/spi/ms41908_2.c
+!kernel/drivers/media/spi/ms41908_2.c
+# kernel/drivers/media/spi/ms41908_1.c
+!kernel/drivers/media/spi/ms41908_1.c
 # kernel/drivers/media/i2c/
 !kernel/drivers/media/i2c/
 /kernel/drivers/media/i2c/*
