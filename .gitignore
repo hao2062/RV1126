@@ -3,41 +3,42 @@
 
 # 2) 通用放开
 !.gitignore
-!edit.sh
+!edit.py
 
 # 3) 放开清单（由脚本维护）
 
-
-# ==== TRACKED_DIRS_BEGIN ====
-
-# ==== TRACKED_DIRS_END ====
-
-
-
-
 # ==== TRACKED_FILES_BEGIN ====
-!kernel/drivers/
-/kernel/drivers/*
-!kernel/drivers/media/
-/kernel/drivers/media/*
-!kernel/drivers/media/i2c/
-/kernel/drivers/media/i2c/*
+# kernel/
 !kernel/
 /kernel/*
+# kernel/arch/
 !kernel/arch/
 /kernel/arch/*
+# kernel/arch/arm/
 !kernel/arch/arm/
 /kernel/arch/arm/*
+# kernel/arch/arm/boot/
 !kernel/arch/arm/boot/
 /kernel/arch/arm/boot/*
+# kernel/arch/arm/boot/dts/
 !kernel/arch/arm/boot/dts/
 /kernel/arch/arm/boot/dts/*
-# BEGIN FILE: kernel/arch/arm/boot/dts/rv1126-alientek.dts
+# kernel/arch/arm/boot/dts/rv1126-alientek.dts
 !kernel/arch/arm/boot/dts/rv1126-alientek.dts
-# END FILE: kernel/arch/arm/boot/dts/rv1126-alientek.dts
-# BEGIN FILE: kernel/drivers/media/i2c/ir6.c
+# kernel/drivers/
+!kernel/drivers/
+/kernel/drivers/*
+# kernel/drivers/media/
+!kernel/drivers/media/
+/kernel/drivers/media/*
+# kernel/drivers/media/i2c/
+!kernel/drivers/media/i2c/
+/kernel/drivers/media/i2c/*
+# kernel/drivers/media/i2c/ir6.c
 !kernel/drivers/media/i2c/ir6.c
-# END FILE: kernel/drivers/media/i2c/ir6.c
+
+
+
 # ==== TRACKED_FILES_END ====
 
 
