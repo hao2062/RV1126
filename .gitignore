@@ -19,6 +19,11 @@
 # kernel/arch/arm/
 !kernel/arch/arm/
 /kernel/arch/arm/*
+# kernel/arch/arm/configs/
+!kernel/arch/arm/configs/
+/kernel/arch/arm/configs/*
+# kernel/arch/arm/configs/alientek_rv1126_defconfig
+!kernel/arch/arm/configs/alientek_rv1126_defconfig
 # kernel/arch/arm/boot/
 !kernel/arch/arm/boot/
 /kernel/arch/arm/boot/*
@@ -36,6 +41,10 @@
 # kernel/drivers/media/i2c/
 !kernel/drivers/media/i2c/
 /kernel/drivers/media/i2c/*
+# kernel/drivers/media/i2c/Kconfig
+!kernel/drivers/media/i2c/Kconfig
+# kernel/drivers/media/i2c/Makefile
+!kernel/drivers/media/i2c/Makefile
 # kernel/drivers/media/i2c/ir6.c
 !kernel/drivers/media/i2c/ir6.c
 
