@@ -15,6 +15,18 @@
 #include <time.h>
 #include <unistd.h>
 
+// 增加 AF 相关的 RK 库文件
+#include "rk_aiq_types_af_algo.h"
+#include "rk_aiq_types_af_algo_int.h"
+#include "rk_aiq_user_api_af.h"
+#include "rk_aiq_user_api_sysctl.h"
+#include "rk_aiq_user_api_awb.h"
+#include "rk_aiq_uapi_awb_int.h"
+#include "rk_aiq_uapi_af_int.h"
+#include <sys/ioctl.h>
+
+#include "af.h"      /* 放到其它 include 之后 */
+
 #define MAX_AIQ_CTX 4
 static rk_aiq_sys_ctx_t *g_aiq_ctx[MAX_AIQ_CTX];
 static pthread_mutex_t aiq_ctx_mutex[MAX_AIQ_CTX] = {
@@ -166,6 +178,11 @@ RK_S32 SAMPLE_COMM_ISP_Run(RK_S32 CamId) {
     return -1;
   }
   printf("rk_aiq_uapi_sysctl_start succeed\n");
+  
+  // 启动 AF 后台线程
+  printf(" === start AF ===\n");
+  AF_Start(g_aiq_ctx[CamId]);
+  
   return 0;
 }
 

@@ -17,6 +17,17 @@
 # external/rkmedia/examples/
 !external/rkmedia/examples/
 /external/rkmedia/examples/*
+# external/rkmedia/examples/common/
+!external/rkmedia/examples/common/
+/external/rkmedia/examples/common/*
+# external/rkmedia/examples/common/af.h
+!external/rkmedia/examples/common/af.h
+# external/rkmedia/examples/common/af.c
+!external/rkmedia/examples/common/af.c
+# external/rkmedia/examples/common/sample_common.h
+!external/rkmedia/examples/common/sample_common.h
+# external/rkmedia/examples/common/sample_common_isp.c
+!external/rkmedia/examples/common/sample_common_isp.c
 # external/rkmedia/examples/rkmedia_vi_vo_test.c
 !external/rkmedia/examples/rkmedia_vi_vo_test.c
 # files/

@@ -13,6 +13,7 @@
 
 #include <rk_aiq_user_api_imgproc.h>
 #include <rk_aiq_user_api_sysctl.h>
+#include <rk_aiq_user_api_asd.h>
 /*
  * stream on:
  * 1) ISP Init
