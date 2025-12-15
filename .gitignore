@@ -17,6 +17,11 @@
 # external/rkmedia/examples/
 !external/rkmedia/examples/
 /external/rkmedia/examples/*
+# external/rkmedia/examples/rockx_demo/
+!external/rkmedia/examples/rockx_demo/
+/external/rkmedia/examples/rockx_demo/*
+# external/rkmedia/examples/rockx_demo/CMakeLists.txt
+!external/rkmedia/examples/rockx_demo/CMakeLists.txt
 # external/rkmedia/examples/common/
 !external/rkmedia/examples/common/
 /external/rkmedia/examples/common/*
