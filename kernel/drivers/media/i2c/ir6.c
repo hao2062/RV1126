@@ -39,27 +39,37 @@
 #include "../platform/rockchip/isp/rkisp_tb_helper.h"
 #include <linux/time.h>
 
-// 宏定义：MIPI 频率，芯片 ID，寄存器地址等
+
+// 定义驱动版本号
 #define DRIVER_VERSION			KERNEL_VERSION(0, 0x01, 0x06)
 
+// 定义 数字增益
 #ifndef V4L2_CID_DIGITAL_GAIN  //数字增益
 #define V4L2_CID_DIGITAL_GAIN		V4L2_CID_GAIN
 #endif
 
-#define MIPI_FREQ_518M			518400000
-#define MIPI_FREQ_259M			259200000
-#define MIPI_FREQ_567M			283500000
+// 定义 MIPI 时钟频率（单位：Hz）
+#define MIPI_FREQ_518M			518400000	// 518.4 MHz
+#define MIPI_FREQ_259M			259200000	// 259.2 MHz
+#define MIPI_FREQ_567M			283500000	// 283.5 MHz
 
+// 定义 cis 的 lane 数
 #define IR6_4LANES			4
 
+// 定义最大像素率
 #define IR6_MAX_PIXEL_RATE		(MIPI_FREQ_518M / 12 * 2 * IR6_4LANES)	//829440000
+
+// 定义 HDR 模式字符串标识
 #define OF_CAMERA_HDR_MODE		"rockchip,camera-hdr-mode"
 
+// 定义 XVCLK 频率
 #define IR6_XVCLK_FREQ_27M		27000000
 
+// 定义 CIS 芯片 ID 及寄存器地址
 #define CHIP_ID				0xc0
 #define IR6_REG_CHIP_ID		0x0083
 
+// CIS 芯片三种模式：睡眠模式，待机模式与流模式
 #define IR6_SLEEP_MODE		0x0140
 #define IR6_MODE_SW_STANDBY		BIT(0)//1
 #define IR6_MODE_STREAMING		0x0
@@ -69,9 +79,10 @@
 #define IR6_ADC_GAIN_REG_L			0x002b
 #define IR6_ADC_VFT_REG				0x0030
 
-#define IR6_ADC_GAIN_REG_H_VALUE			0x00
-#define IR6_ADC_GAIN_REG_L_VALUE			0x00
-#define IR6_ADC_VFT_REG_VALUE				0x1f
+// ADC增益控制信号默认值，用于非DOL2模式和DOL2模式的前一帧
+#define IR6_ADC_GAIN_REG_H_VALUE			0x00	// ADC增益高字节默认值
+#define IR6_ADC_GAIN_REG_L_VALUE			0x00	// ADC增益低字节默认值
+#define IR6_ADC_VFT_REG_VALUE				0x1f	// ADC VFT寄存器默认值
 
 //ADC增益控制信号,默认一倍增益。用于DOL2模式的后一帧。
 #define IR6_ADC_DOL2_GAIN_REG_H		0x002e
@@ -82,11 +93,11 @@
 #define IR6_ADC_DOL2_GAIN_REG_L_VALUE  		0x00
 #define IR6_ADC_DOL2_VFT_REG_VALUE			0x1f
 
-
-#define IR6_DIG_GAIN_MIN			0x00
-#define IR6_DIG_GAIN_MAX			0x40
-#define IR6_DIG_GAIN_STEP			1
-#define IR6_DIG_GAIN_DEFAULT		0x3f
+// 数字增益相关参数
+#define IR6_DIG_GAIN_MIN			0x00	// 数字增益最小值
+#define IR6_DIG_GAIN_MAX			0x40	// 数字增益最大值
+#define IR6_DIG_GAIN_STEP			1		// 数字增益步进
+#define IR6_DIG_GAIN_DEFAULT		0x3f	// 数字增益默认值
 
 //dol2模式下第一帧数字增益
 #define IR6_DIG_GAIN_EN					0x01d7
