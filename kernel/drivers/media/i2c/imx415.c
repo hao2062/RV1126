@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
+
+// 版本控制相关：
 /*
  * imx415 driver
  *
@@ -25,6 +27,7 @@
  * 2. fixed linkfreq error
  */
 
+// 头文件
 #define DEBUG
 #include <linux/clk.h>
 #include <linux/device.h>
@@ -46,35 +49,44 @@
 #include <linux/rk-preisp.h>
 #include "../platform/rockchip/isp/rkisp_tb_helper.h"
 
+// 定义驱动版本号
 #define DRIVER_VERSION			KERNEL_VERSION(0, 0x01, 0x06)
 
+// 定义 数字增益
 #ifndef V4L2_CID_DIGITAL_GAIN
 #define V4L2_CID_DIGITAL_GAIN		V4L2_CID_GAIN
 #endif
 
+// 定义：MIPI 频率
 #define MIPI_FREQ_891M			891000000
 #define MIPI_FREQ_446M			446000000
 #define MIPI_FREQ_743M			743000000
 #define MIPI_FREQ_297M			297000000
 
+// 定义 cis 的 lane 数
 #define IMX415_4LANES			4
 
+// 定义最大像素率
 #define IMX415_MAX_PIXEL_RATE		(MIPI_FREQ_891M / 10 * 2 * IMX415_4LANES)
 #define OF_CAMERA_HDR_MODE		"rockchip,camera-hdr-mode"
 
+// 定义 XVCLK 频率（外部时钟）
 #define IMX415_XVCLK_FREQ_37M		37125000
 
 /* TODO: Get the real chip id from reg */
 #define CHIP_ID				0xE0
 #define IMX415_REG_CHIP_ID		0x311A
 
+// CIS 芯片三种模式：睡眠模式，待机模式与流模式
 #define IMX415_REG_CTRL_MODE		0x3000
 #define IMX415_MODE_SW_STANDBY		BIT(0)
 #define IMX415_MODE_STREAMING		0x0
 
+// IMX 总增益寄存器地址
 #define IMX415_LF_GAIN_REG_H		0x3091
 #define IMX415_LF_GAIN_REG_L		0x3090
 
+// 
 #define IMX415_SF1_GAIN_REG_H		0x3093
 #define IMX415_SF1_GAIN_REG_L		0x3092
 
@@ -103,6 +115,7 @@
 #define IMX415_RHS2_REG_L		0x3064
 #define IMX415_RHS2_DEFAULT		0x004D
 
+// 曝光时间和增益的最小值、最大值、步进及默认值
 #define	IMX415_EXPOSURE_MIN		4
 #define	IMX415_EXPOSURE_STEP		1
 #define IMX415_VTS_MAX			0x7fff
@@ -112,6 +125,7 @@
 #define IMX415_GAIN_STEP		1
 #define IMX415_GAIN_DEFAULT		0x00
 
+// 从寄存器值获取增益和曝光时间的宏定义
 #define IMX415_FETCH_GAIN_H(VAL)	(((VAL) >> 8) & 0x07)
 #define IMX415_FETCH_GAIN_L(VAL)	((VAL) & 0xFF)
 
@@ -156,19 +170,23 @@
 #define RHS1_MAX_X3(VAL)		(((VAL) * 3 - 1) / 6 * 6 + 1)
 #define SHR1_MIN_X3			13u
 
+// 定义 pinctrl 状态
 #define OF_CAMERA_PINCTRL_STATE_DEFAULT	"rockchip,camera_default"
 #define OF_CAMERA_PINCTRL_STATE_SLEEP	"rockchip,camera_sleep"
 
 #define IMX415_NAME			"imx415"
 
+// 定义供电引脚名称
 static const char * const imx415_supply_names[] = {
 	"dvdd",		/* Digital core power */
 	"dovdd",	/* Digital I/O power */
 	"avdd",		/* Analog power */
 };
 
+// 定义供电引脚数列
 #define IMX415_NUM_SUPPLIES ARRAY_SIZE(imx415_supply_names)
 
+// 不同的数据输出端口
 enum imx415_max_pad {
 	PAD0, /* link to isp */
 	PAD1, /* link to csi wr0 | hdr x2:L x3:M */
@@ -177,70 +195,76 @@ enum imx415_max_pad {
 	PAD_MAX,
 };
 
+// 寄存器的 地址-值 对
 struct regval {
 	u16 addr;
 	u8 val;
 };
 
+// IMX415 的工作模式结构体
 struct imx415_mode {
-	u32 bus_fmt;
-	u32 width;
-	u32 height;
-	struct v4l2_fract max_fps;
-	u32 hts_def;
-	u32 vts_def;
-	u32 exp_def;
-	u32 mipi_freq_idx;
-	u32 bpp;
-	const struct regval *global_reg_list;
-	const struct regval *reg_list;
-	u32 hdr_mode;
-	u32 vc[PAD_MAX];
+	u32 bus_fmt;                        // 数据总线格式
+	u32 width;                          // 图像宽度
+	u32 height;                         // 图像高度
+	struct v4l2_fract max_fps;          // 最大帧率
+	u32 hts_def;                        // 行时钟周期默认值
+	u32 vts_def;                        // 帧时钟周期默认值
+	u32 exp_def;                        // 默认曝光时间
+	u32 mipi_freq_idx;                  // MIPI频率索引
+	u32 bpp;                            // 每像素位数（bit per pixel）
+	const struct regval *global_reg_list;// 全局寄存器配置表
+	const struct regval *reg_list;      // 模式寄存器配置表
+	u32 hdr_mode;                       // HDR模式
+	u32 vc[PAD_MAX];                    // 虚拟通道号
 };
 
+// IMX415 设备结构体
 struct imx415 {
-	struct i2c_client	*client;
-	struct clk		*xvclk;
-	struct gpio_desc	*reset_gpio;
-	struct gpio_desc	*power_gpio;
-	struct regulator_bulk_data supplies[IMX415_NUM_SUPPLIES];
+	struct i2c_client         *client;            // I2C 客户端指针
+	struct clk                *xvclk;             // 外部时钟
+	struct gpio_desc          *reset_gpio;        // 复位 GPIO
+	struct gpio_desc          *power_gpio;        // 电源 GPIO
+	struct regulator_bulk_data supplies[IMX415_NUM_SUPPLIES]; // 电源管理
 
-	struct pinctrl		*pinctrl;
-	struct pinctrl_state	*pins_default;
-	struct pinctrl_state	*pins_sleep;
+	struct pinctrl            *pinctrl;           // pinctrl 控制器
+	struct pinctrl_state      *pins_default;      // 默认 pinctrl 状态
+	struct pinctrl_state      *pins_sleep;        // 睡眠 pinctrl 状态
 
-	struct v4l2_subdev	subdev;
-	struct media_pad	pad;
-	struct v4l2_ctrl_handler ctrl_handler;
-	struct v4l2_ctrl	*exposure;
-	struct v4l2_ctrl	*anal_a_gain;
-	struct v4l2_ctrl	*digi_gain;
-	struct v4l2_ctrl	*hblank;
-	struct v4l2_ctrl	*vblank;
-	struct v4l2_ctrl	*pixel_rate;
-	struct v4l2_ctrl	*link_freq;
-	struct mutex		mutex;
-	bool			streaming;
-	bool			power_on;
-	bool			is_thunderboot;
-	bool			is_thunderboot_ng;
-	bool			is_first_streamoff;
-	const struct imx415_mode *cur_mode;
-	u32			module_index;
-	u32			cfg_num;
-	const char		*module_facing;
-	const char		*module_name;
-	const char		*len_name;
-	u32			cur_vts;
-	bool			has_init_exp;
-	struct preisp_hdrae_exp_s init_hdrae_exp;
+	struct v4l2_subdev        subdev;             // V4L2 子设备
+	struct media_pad          pad;                // 媒体 pad
+	struct v4l2_ctrl_handler  ctrl_handler;       // 控制器处理句柄
+	struct v4l2_ctrl          *exposure;          // 曝光控制
+	struct v4l2_ctrl          *anal_a_gain;       // 模拟增益控制
+	struct v4l2_ctrl          *digi_gain;         // 数字增益控制（未使用）
+	struct v4l2_ctrl          *hblank;            // 行消隐控制
+	struct v4l2_ctrl          *vblank;            // 帧消隐控制
+	struct v4l2_ctrl          *pixel_rate;        // 像素速率控制
+	struct v4l2_ctrl          *link_freq;         // 链路频率控制
+	struct mutex              mutex;              // 互斥锁
+	bool                      streaming;          // 是否正在流式传输
+	bool                      power_on;           // 电源状态
+	bool                      is_thunderboot;     // 是否为 thunderboot 快速启动模式
+	bool                      is_thunderboot_ng;  // thunderboot NG 状态（快启结束状态）
+	bool                      is_first_streamoff; // thunderboot 首次 streamoff 标志
+	const struct imx415_mode  *cur_mode;          // 当前工作模式
+	u32                       module_index;       // 模块索引
+	u32                       cfg_num;            // 配置数量
+	const char                *module_facing;     // 模块朝向
+	const char                *module_name;       // 模块名称
+	const char                *len_name;          // 镜头名称
+	u32                       cur_vts;            // 当前 VTS（帧时钟周期）
+	bool                      has_init_exp;       // 是否有初始化曝光
+	struct preisp_hdrae_exp_s init_hdrae_exp;     // 初始化 HDR AE 曝光参数
 };
 
+// 获取 imx415 设备结构体的宏定义
 #define to_imx415(sd) container_of(sd, struct imx415, subdev)
 
 /*
  * Xclk 37.125Mhz
  */
+
+// 全局寄存器配置表(12bit 3864x2192 30fps)
 static __maybe_unused const struct regval imx415_global_12bit_3864x2192_regs[] = {
 	{0x3002, 0x00},
 	{0x3008, 0x7F},
@@ -329,6 +353,7 @@ static __maybe_unused const struct regval imx415_global_12bit_3864x2192_regs[] =
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(12bit 3864x2192 891M)
 static __maybe_unused const struct regval imx415_linear_12bit_3864x2192_891M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -363,6 +388,7 @@ static __maybe_unused const struct regval imx415_linear_12bit_3864x2192_891M_reg
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(12bit DOL2 3864x2192 1782M)
 static __maybe_unused const struct regval imx415_hdr2_12bit_3864x2192_1782M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -397,6 +423,7 @@ static __maybe_unused const struct regval imx415_hdr2_12bit_3864x2192_1782M_regs
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(12bit DOL3 3864x2192 1782M)
 static __maybe_unused const struct regval imx415_hdr3_12bit_3864x2192_1782M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -431,6 +458,7 @@ static __maybe_unused const struct regval imx415_hdr3_12bit_3864x2192_1782M_regs
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit 3864x2192 30fps)
 static __maybe_unused const struct regval imx415_global_10bit_3864x2192_regs[] = {
 	{0x3002, 0x00},
 	{0x3008, 0x7F},
@@ -518,6 +546,7 @@ static __maybe_unused const struct regval imx415_global_10bit_3864x2192_regs[] =
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit 3864x2192 1485M)
 static __maybe_unused const struct regval imx415_hdr3_10bit_3864x2192_1485M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -553,6 +582,7 @@ static __maybe_unused const struct regval imx415_hdr3_10bit_3864x2192_1485M_regs
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit 3864x2192 1782M)
 static __maybe_unused const struct regval imx415_hdr3_10bit_3864x2192_1782M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -588,6 +618,7 @@ static __maybe_unused const struct regval imx415_hdr3_10bit_3864x2192_1782M_regs
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit DOL2 3864x2192 1485M)
 static __maybe_unused const struct regval imx415_hdr2_10bit_3864x2192_1485M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -623,6 +654,7 @@ static __maybe_unused const struct regval imx415_hdr2_10bit_3864x2192_1485M_regs
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit 1932x1096 891M)
 static __maybe_unused const struct regval imx415_linear_10bit_3864x2192_891M_regs[] = {
 	{0x3020, 0x00},
 	{0x3021, 0x00},
@@ -658,6 +690,7 @@ static __maybe_unused const struct regval imx415_linear_10bit_3864x2192_891M_reg
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(10bit DOL2 1932x1096 594M)
 static __maybe_unused const struct regval imx415_linear_12bit_1932x1096_594M_regs[] = {
 	{0x3020, 0x01},
 	{0x3021, 0x01},
@@ -697,6 +730,7 @@ static __maybe_unused const struct regval imx415_linear_12bit_1932x1096_594M_reg
 	{REG_NULL, 0x00},
 };
 
+// 全局寄存器配置表(12bit DOL2 1932x1096 891M)
 static __maybe_unused const struct regval imx415_hdr2_12bit_1932x1096_891M_regs[] = {
 	{0x3020, 0x01},
 	{0x3021, 0x01},
@@ -748,52 +782,54 @@ static __maybe_unused const struct regval imx415_hdr2_12bit_1932x1096_891M_regs[
  *	.get_selection
  * }
  */
+
+ // 支持的模式列表
 static const struct imx415_mode supported_modes[] = {
 	/*
 	 * frame rate = 1 / (Vtt * 1H) = 1 / (VMAX * 1H)
 	 * VMAX >= (PIX_VWIDTH / 2) + 46 = height + 46
 	 */
 	{
-		.bus_fmt = MEDIA_BUS_FMT_SGBRG10_1X10,
-		.width = 3864,
-		.height = 2192,
-		.max_fps = {
-			.numerator = 10000,
-			.denominator = 300000,
+		.bus_fmt = MEDIA_BUS_FMT_SGBRG10_1X10,          // 数据总线格式：10位GBRG
+		.width = 3864,                                  // 图像宽度
+		.height = 2192,                                 // 图像高度
+		.max_fps = {                                    // 最大帧率
+			.numerator = 10000,                         // 分子
+			.denominator = 300000,                      // 分母（实际帧率=分母/分子=30fps）
 		},
-		.exp_def = 0x08ca - 0x08,
-		.hts_def = 0x044c * IMX415_4LANES * 2,
-		.vts_def = 0x08ca,
-		.global_reg_list = imx415_global_10bit_3864x2192_regs,
-		.reg_list = imx415_linear_10bit_3864x2192_891M_regs,
-		.hdr_mode = NO_HDR,
-		.mipi_freq_idx = 1,
-		.bpp = 10,
+		.exp_def = 0x08ca - 0x08,                       // 默认曝光时间
+		.hts_def = 0x044c * IMX415_4LANES * 2,          // 行时钟周期默认值
+		.vts_def = 0x08ca,                              // 帧时钟周期默认值
+		.global_reg_list = imx415_global_10bit_3864x2192_regs, // 全局寄存器配置表
+		.reg_list = imx415_linear_10bit_3864x2192_891M_regs,   // 模式寄存器配置表
+		.hdr_mode = NO_HDR,                             // HDR模式：无HDR
+		.mipi_freq_idx = 1,                             // MIPI频率索引
+		.bpp = 10,                                      // 每像素位数（bit per pixel）
 	},
 	{
-		.bus_fmt = MEDIA_BUS_FMT_SGBRG10_1X10,
-		.width = 3864,
-		.height = 2192,
-		.max_fps = {
-			.numerator = 10000,
-			.denominator = 300000,
+		.bus_fmt = MEDIA_BUS_FMT_SGBRG10_1X10,          // 数据总线格式：10位GBRG
+		.width = 3864,                                 // 图像宽度
+		.height = 2192,                                // 图像高度
+		.max_fps = {                                   // 最大帧率
+			.numerator = 10000,                        // 分子
+			.denominator = 300000,                     // 分母（实际帧率=分母/分子=30fps）
 		},
-		.exp_def = 0x08fc * 2 - 0x0da8,
-		.hts_def = 0x0226 * IMX415_4LANES * 2,
+		.exp_def = 0x08fc * 2 - 0x0da8,                // 默认曝光时间
+		.hts_def = 0x0226 * IMX415_4LANES * 2,         // 行时钟周期默认值
 		/*
 		 * IMX415 HDR mode T-line is half of Linear mode,
 		 * make vts double to workaround.
 		 */
-		.vts_def = 0x08fc * 2,
-		.global_reg_list = imx415_global_10bit_3864x2192_regs,
-		.reg_list = imx415_hdr2_10bit_3864x2192_1485M_regs,
-		.hdr_mode = HDR_X2,
-		.mipi_freq_idx = 2,
-		.bpp = 10,
-		.vc[PAD0] = V4L2_MBUS_CSI2_CHANNEL_1,
-		.vc[PAD1] = V4L2_MBUS_CSI2_CHANNEL_0,//L->csi wr0
-		.vc[PAD2] = V4L2_MBUS_CSI2_CHANNEL_1,
-		.vc[PAD3] = V4L2_MBUS_CSI2_CHANNEL_1,//M->csi wr2
+		.vts_def = 0x08fc * 2,                        // 帧时钟周期默认值
+		.global_reg_list = imx415_global_10bit_3864x2192_regs, // 全局寄存器配置表
+		.reg_list = imx415_hdr2_10bit_3864x2192_1485M_regs,    // 模式寄存器配置表
+		.hdr_mode = HDR_X2,                           // HDR模式：2帧HDR
+		.mipi_freq_idx = 2,                           // MIPI频率索引
+		.bpp = 10,                                    // 每像素位数（bit per pixel）
+		.vc[PAD0] = V4L2_MBUS_CSI2_CHANNEL_1,         // 虚拟通道号：PAD0
+		.vc[PAD1] = V4L2_MBUS_CSI2_CHANNEL_0,         // 虚拟通道号：PAD1，L->csi wr0
+		.vc[PAD2] = V4L2_MBUS_CSI2_CHANNEL_1,         // 虚拟通道号：PAD2
+		.vc[PAD3] = V4L2_MBUS_CSI2_CHANNEL_1,         // 虚拟通道号：PAD3，M->csi wr2
 	},
 	{
 		.bus_fmt = MEDIA_BUS_FMT_SGBRG10_1X10,
@@ -957,6 +993,7 @@ static const struct imx415_mode supported_modes[] = {
 	},
 };
 
+// sensor 支持的 mipi 频率
 static const s64 link_freq_items[] = {
 	MIPI_FREQ_297M,
 	MIPI_FREQ_446M,
@@ -964,49 +1001,55 @@ static const s64 link_freq_items[] = {
 	MIPI_FREQ_891M,
 };
 
-/* Write registers up to 4 at a time */
+// IMX415 写寄存器值
 static int imx415_write_reg(struct i2c_client *client, u16 reg,
-			    u32 len, u32 val)
+				u32 len, u32 val)
 {
 	u32 buf_i, val_i;
 	u8 buf[6];
 	u8 *val_p;
 	__be32 val_be;
 
+	// 检查写入长度是否合法（最大4字节）
 	if (len > 4)
 		return -EINVAL;
 
+	// 设置寄存器地址（高8位和低8位）
 	buf[0] = reg >> 8;
 	buf[1] = reg & 0xff;
 
+	// 将数据转换为大端格式
 	val_be = cpu_to_be32(val);
 	val_p = (u8 *)&val_be;
 	buf_i = 2;
 	val_i = 4 - len;
 
+	// 将数据拷贝到buf中
 	while (val_i < 4)
 		buf[buf_i++] = val_p[val_i++];
 
+	// 通过I2C发送数据
 	if (i2c_master_send(client, buf, len + 2) != len + 2)
 		return -EIO;
 
 	return 0;
 }
 
+// IMX415 批量写寄存器值
 static int imx415_write_array(struct i2c_client *client,
-			      const struct regval *regs)
+				  const struct regval *regs)
 {
 	u32 i;
 	int ret = 0;
 
 	for (i = 0; ret == 0 && regs[i].addr != REG_NULL; i++) {
 		ret = imx415_write_reg(client, regs[i].addr,
-				       IMX415_REG_VALUE_08BIT, regs[i].val);
+					   IMX415_REG_VALUE_08BIT, regs[i].val);
 	}
 	return ret;
 }
 
-/* Read registers up to 4 at a time */
+// IMX415 读取寄存器值
 static int imx415_read_reg(struct i2c_client *client, u16 reg, unsigned int len,
 			   u32 *val)
 {
@@ -1041,6 +1084,7 @@ static int imx415_read_reg(struct i2c_client *client, u16 reg, unsigned int len,
 	return 0;
 }
 
+// 计算给定格式与所请求格式之间的分辨率距离
 static int imx415_get_reso_dist(const struct imx415_mode *mode,
 				struct v4l2_mbus_framefmt *framefmt)
 {
@@ -1048,6 +1092,7 @@ static int imx415_get_reso_dist(const struct imx415_mode *mode,
 	       abs(mode->height - framefmt->height);
 }
 
+// 查找与请求格式最匹配的模式
 static const struct imx415_mode *
 imx415_find_best_fit(struct imx415 *imx415, struct v4l2_subdev_format *fmt)
 {
@@ -1057,8 +1102,10 @@ imx415_find_best_fit(struct imx415 *imx415, struct v4l2_subdev_format *fmt)
 	int cur_best_fit_dist = -1;
 	unsigned int i;
 
+	// 遍历所有支持的模式，找到与请求格式距离最小且数据格式匹配的模式
 	for (i = 0; i < imx415->cfg_num; i++) {
 		dist = imx415_get_reso_dist(&supported_modes[i], framefmt);
+		// 选择距离更小且数据格式匹配的模式
 		if ((cur_best_fit_dist == -1 || dist <= cur_best_fit_dist) &&
 			supported_modes[i].bus_fmt == framefmt->code) {
 			cur_best_fit_dist = dist;
@@ -1066,41 +1113,51 @@ imx415_find_best_fit(struct imx415 *imx415, struct v4l2_subdev_format *fmt)
 		}
 	}
 
+	// 返回找到的最佳匹配模式
 	return &supported_modes[cur_best_fit];
 }
 
+// 启动 IMX415 传感器电源的内部函数声明
 static int __imx415_power_on(struct imx415 *imx415);
 
+// 切换当前工作模式
 static void imx415_change_mode(struct imx415 *imx415, const struct imx415_mode *mode)
 {
+	// 如果处于 imx415 和 ISP 都处于 Thunderboot NG 状态，则重新上电传感器
 	if (imx415->is_thunderboot && rkisp_tb_get_state() == RKISP_TB_NG) {
 		imx415->is_thunderboot = false;
 		imx415->is_thunderboot_ng = true;
 		__imx415_power_on(imx415);
 	}
+
+	// 更新当前模式和默认帧时钟周期
 	imx415->cur_mode = mode;
 	imx415->cur_vts = imx415->cur_mode->vts_def;
 	dev_dbg(&imx415->client->dev, "set fmt: cur_mode: %dx%d, hdr: %d\n",
 		mode->width, mode->height, mode->hdr_mode);
 }
 
+// 设置图像格式
 static int imx415_set_fmt(struct v4l2_subdev *sd,
 			  struct v4l2_subdev_pad_config *cfg,
 			  struct v4l2_subdev_format *fmt)
 {
-	struct imx415 *imx415 = to_imx415(sd);
+	struct imx415 *imx415 = to_imx415(sd);	// 根据 sd 成员指针，反推 imx415 结构体指针
 	const struct imx415_mode *mode;
-	s64 h_blank, vblank_def, vblank_min;
+	s64 h_blank, vblank_def, vblank_min;	// 水平和垂直空白期
 	u64 pixel_rate = 0;
 
+	// 加锁，保护对 imx415 结构体的访问
 	mutex_lock(&imx415->mutex);
 
-	mode = imx415_find_best_fit(imx415, fmt);
+	// 查找与请求格式最匹配的模式，并更新 fmt 结构体
+	mode = imx415_find_best_fit(imx415, fmt);	
 	fmt->format.code = mode->bus_fmt;
 	fmt->format.width = mode->width;
 	fmt->format.height = mode->height;
-	fmt->format.field = V4L2_FIELD_NONE;
-	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
+	fmt->format.field = V4L2_FIELD_NONE;	
+
+	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {	
 #ifdef CONFIG_VIDEO_V4L2_SUBDEV_API
 		*v4l2_subdev_get_try_format(sd, cfg, fmt->pad) = fmt->format;
 #else
@@ -1108,7 +1165,8 @@ static int imx415_set_fmt(struct v4l2_subdev *sd,
 		return -ENOTTY;
 #endif
 	} else {
-		imx415_change_mode(imx415, mode);
+		// 切换到选定的模式
+		imx415_change_mode(imx415, mode);	
 		h_blank = mode->hts_def - mode->width;
 		__v4l2_ctrl_modify_range(imx415->hblank, h_blank,
 					 h_blank, 1, h_blank);
@@ -1129,6 +1187,7 @@ static int imx415_set_fmt(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 获取当前图像格式
 static int imx415_get_fmt(struct v4l2_subdev *sd,
 			  struct v4l2_subdev_pad_config *cfg,
 			  struct v4l2_subdev_format *fmt)
@@ -1159,6 +1218,7 @@ static int imx415_get_fmt(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 枚举支持的数据格式
 static int imx415_enum_mbus_code(struct v4l2_subdev *sd,
 				 struct v4l2_subdev_pad_config *cfg,
 				 struct v4l2_subdev_mbus_code_enum *code)
@@ -1172,6 +1232,7 @@ static int imx415_enum_mbus_code(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 枚举支持的帧大小
 static int imx415_enum_frame_sizes(struct v4l2_subdev *sd,
 				   struct v4l2_subdev_pad_config *cfg,
 				   struct v4l2_subdev_frame_size_enum *fse)
@@ -1192,6 +1253,7 @@ static int imx415_enum_frame_sizes(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 获取当前帧间隔
 static int imx415_g_frame_interval(struct v4l2_subdev *sd,
 				   struct v4l2_subdev_frame_interval *fi)
 {
@@ -1205,6 +1267,7 @@ static int imx415_g_frame_interval(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 获取媒体总线配置
 static int imx415_g_mbus_config(struct v4l2_subdev *sd,
 				struct v4l2_mbus_config *config)
 {
@@ -1225,6 +1288,7 @@ static int imx415_g_mbus_config(struct v4l2_subdev *sd,
 	return 0;
 }
 
+// 获取模块信息
 static void imx415_get_module_inf(struct imx415 *imx415,
 				  struct rkmodule_inf *inf)
 {
@@ -1235,6 +1299,7 @@ static void imx415_get_module_inf(struct imx415 *imx415,
 	strlcpy(inf->base.lens, imx415->len_name, sizeof(inf->base.lens));
 }
 
+// 设置 3 帧 HDR 曝光参数
 static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 				   struct preisp_hdrae_exp_s *ae)
 {
@@ -1250,12 +1315,14 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 	int rhs1_max = 0;
 	int shr2_min = 0;
 
+	// 如果还未初始化曝光参数且未处于流式传输，则保存曝光参数，稍后再写入
 	if (!imx415->has_init_exp && !imx415->streaming) {
 		imx415->init_hdrae_exp = *ae;
 		imx415->has_init_exp = true;
 		dev_dbg(&imx415->client->dev, "imx415 is not streaming, save hdr ae!\n");
 		return ret;
 	}
+	// 读取长、中、短曝光时间和增益
 	l_exp_time = ae->long_exp_reg;
 	m_exp_time = ae->middle_exp_reg;
 	s_exp_time = ae->short_exp_reg;
@@ -1267,9 +1334,10 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		l_exp_time, m_exp_time, s_exp_time,
 		l_a_gain, m_a_gain, s_a_gain);
 
+	// 组寄存器写入开始
 	ret = imx415_write_reg(client, IMX415_GROUP_HOLD_REG,
 		IMX415_REG_VALUE_08BIT, IMX415_GROUP_HOLD_START);
-	/* gain effect n+1 */
+	// 写入长帧（LF）、中帧（SF1）、短帧（SF2）增益
 	ret |= imx415_write_reg(client, IMX415_LF_GAIN_REG_H,
 		IMX415_REG_VALUE_08BIT, IMX415_FETCH_GAIN_H(l_a_gain));
 	ret |= imx415_write_reg(client, IMX415_LF_GAIN_REG_L,
@@ -1283,46 +1351,44 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 	ret |= imx415_write_reg(client, IMX415_SF2_GAIN_REG_L,
 		IMX415_REG_VALUE_08BIT, IMX415_FETCH_GAIN_L(s_a_gain));
 
-	/* Restrictions
-	 *   FSC = 4 * VMAX and FSC should be 6n;
+	/*
+	 * 约束条件说明：
+	 *   FSC = 4 * VMAX，且FSC应为6的倍数；
 	 *   exp_l = FSC - SHR0 + Toffset;
-	 *
 	 *   SHR0 = FSC - exp_l + Toffset;
 	 *   SHR0 <= (FSC -12);
 	 *   SHR0 >= RHS2 + 13;
-	 *   SHR0 should be 3n;
+	 *   SHR0 应为3的倍数；
 	 *
 	 *   exp_m = RHS1 - SHR1 + Toffset;
-	 *
 	 *   RHS1 < BRL * 3;
 	 *   RHS1 <= SHR2 - 13;
 	 *   RHS1 >= SHR1 + 12;
 	 *   SHR1 >= 13;
 	 *   SHR1 <= RHS1 - 12;
 	 *   RHS1(n+1) >= RHS1(n) + BRL * 3 -FSC + 3;
-	 *
-	 *   SHR1 should be 3n+1 and RHS1 should be 6n+1;
+	 *   SHR1 应为 3n+1，RHS1 应为 6n+1；
 	 *
 	 *   exp_s = RHS2 - SHR2 + Toffset;
-	 *
 	 *   RHS2 < BRL * 3 + RHS1;
 	 *   RHS2 <= SHR0 - 13;
 	 *   RHS2 >= SHR2 + 12;
 	 *   SHR2 >= RHS1 + 13;
 	 *   SHR2 <= RHS2 - 12;
-	 *   RHS1(n+1) >= RHS1(n) + BRL * 3 -FSC + 3;
-	 *
-	 *   SHR2 should be 3n+2 and RHS2 should be 6n+2;
+	 *   RHS2(n+1) >= RHS2(n) + BRL * 3 -FSC + 3;
+	 *   SHR2 应为 3n+2，RHS2 应为 6n+2；
 	 */
 
-	/* The HDR mode vts is double by default to workaround T-line */
+	// 计算帧同步周期（FSC），并对齐到6的倍数
 	fsc = imx415->cur_vts;
 	fsc = fsc / 6 * 6;
+	// 计算长帧SHR0
 	shr0 = fsc - l_exp_time;
 	dev_dbg(&client->dev,
 		"line(%d) shr0 %d, l_exp_time %d, fsc %d\n",
 		__LINE__, shr0, l_exp_time, fsc);
 
+	// 计算RHS1（中帧起始），应为6n+1
 	rhs1 = (SHR1_MIN_X3 + m_exp_time + 5) / 6 * 6 + 1;
 	if (imx415->cur_mode->height == 2192)
 		rhs1_max = RHS1_MAX_X3(BRL_ALL);
@@ -1336,7 +1402,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		"line(%d) rhs1 %d, m_exp_time %d rhs1_old %d\n",
 		__LINE__, rhs1, m_exp_time, rhs1_old);
 
-	//Dynamic adjustment rhs2 must meet the following conditions
+	// 动态调整RHS1，确保满足约束条件
 	if (imx415->cur_mode->height == 2192)
 		rhs1_change_limit = rhs1_old + 3 * BRL_ALL - fsc + 3;
 	else
@@ -1358,7 +1424,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 
 	rhs1_old = rhs1;
 
-	/* shr1 = rhs1 - s_exp_time */
+	// 计算SHR1（中帧曝光起始），SHR1 = RHS1 - m_exp_time，最小为SHR1_MIN_X3
 	if (rhs1 - m_exp_time <= SHR1_MIN_X3) {
 		shr1 = SHR1_MIN_X3;
 		m_exp_time = rhs1 - shr1;
@@ -1366,6 +1432,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		shr1 = rhs1 - m_exp_time;
 	}
 
+	// 计算RHS2（短帧起始），应为6n+2
 	shr2_min = rhs1 + 13;
 	rhs2 = (shr2_min + s_exp_time + 5) / 6 * 6 + 2;
 	if (rhs2 > (shr0 - 13))
@@ -1376,7 +1443,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		"line(%d) rhs2 %d, s_exp_time %d, rhs2_old %d\n",
 		__LINE__, rhs2, s_exp_time, rhs2_old);
 
-	//Dynamic adjustment rhs2 must meet the following conditions
+	// 动态调整RHS2，确保满足约束条件
 	if (imx415->cur_mode->height == 2192)
 		rhs2_change_limit = rhs2_old + 3 * BRL_ALL - fsc + 3;
 	else
@@ -1394,7 +1461,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 
 	rhs2_old = rhs2;
 
-	/* shr2 = rhs2 - s_exp_time */
+	// 计算SHR2（短帧曝光起始），SHR2 = RHS2 - s_exp_time，最小为shr2_min
 	if (rhs2 - s_exp_time <= shr2_min) {
 		shr2 = shr2_min;
 		s_exp_time = rhs2 - shr2;
@@ -1405,11 +1472,13 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		"line(%d) rhs2_new %d, s_exp_time %d shr2 %d, rhs2_change_limit %d\n",
 		__LINE__, rhs2, s_exp_time, shr2, rhs2_change_limit);
 
+	// 检查SHR0范围
 	if (shr0 < rhs2 + 13)
 		shr0 = rhs2 + 13;
 	else if (shr0 > fsc - 12)
 		shr0 = fsc - 12;
 
+	// 打印最终曝光参数
 	dev_dbg(&client->dev,
 		"long exposure: l_exp_time=%d, fsc=%d, shr0=%d, l_a_gain=%d\n",
 		l_exp_time, fsc, shr0, l_a_gain);
@@ -1419,8 +1488,8 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 	dev_dbg(&client->dev,
 		"short exposure(SEF2): s_exp_time=%d, rhs2=%d, shr2=%d, s_a_gain=%d\n",
 		s_exp_time, rhs2, shr2, s_a_gain);
-	/* time effect n+1 */
-	/* write SEF2 exposure RHS2 regs*/
+
+	// 写入短帧（SEF2）曝光 RHS2 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_RHS2_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1433,7 +1502,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		IMX415_RHS2_REG_H,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_RHS1_H(rhs2));
-	/* write SEF2 exposure SHR2 regs*/
+	// 写入短帧（SEF2）曝光 SHR2 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_SF2_EXPO_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1446,7 +1515,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		IMX415_SF2_EXPO_REG_H,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_EXP_H(shr2));
-	/* write SEF1 exposure RHS1 regs*/
+	// 写入中帧（SEF1）曝光 RHS1 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_RHS1_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1459,7 +1528,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		IMX415_RHS1_REG_H,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_RHS1_H(rhs1));
-	/* write SEF1 exposure SHR1 regs*/
+	// 写入中帧（SEF1）曝光 SHR1 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_SF1_EXPO_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1472,7 +1541,7 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		IMX415_SF1_EXPO_REG_H,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_EXP_H(shr1));
-	/* write LF exposure SHR0 regs*/
+	// 写入长帧（LF）曝光 SHR0 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_LF_EXPO_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1486,28 +1555,33 @@ static int imx415_set_hdrae_3frame(struct imx415 *imx415,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_EXP_H(shr0));
 
+	// 组寄存器写入结束
 	ret |= imx415_write_reg(client, IMX415_GROUP_HOLD_REG,
 		IMX415_REG_VALUE_08BIT, IMX415_GROUP_HOLD_END);
 	return ret;
 }
 
+// 设置 2 帧 HDR 曝光参数
 static int imx415_set_hdrae(struct imx415 *imx415,
-			    struct preisp_hdrae_exp_s *ae)
+				struct preisp_hdrae_exp_s *ae)
 {
 	struct i2c_client *client = imx415->client;
-	u32 l_exp_time, m_exp_time, s_exp_time;
-	u32 l_a_gain, m_a_gain, s_a_gain;
-	int shr1, shr0, rhs1, rhs1_max, rhs1_min;
-	static int rhs1_old = IMX415_RHS1_DEFAULT;
+	u32 l_exp_time, m_exp_time, s_exp_time; // 长曝光时间、中曝光时间、短曝光时间
+	u32 l_a_gain, m_a_gain, s_a_gain;       // 长增益、中增益、短增益
+	int shr1, shr0, rhs1, rhs1_max, rhs1_min; // 曝光起始和参考行时间
+	static int rhs1_old = IMX415_RHS1_DEFAULT; // 上一次的 RHS1 值
 	int ret = 0;
-	u32 fsc;
+	u32 fsc; // 帧同步周期
 
+	// 如果未初始化曝光参数且未处于流式传输状态，则保存曝光参数
 	if (!imx415->has_init_exp && !imx415->streaming) {
 		imx415->init_hdrae_exp = *ae;
 		imx415->has_init_exp = true;
 		dev_dbg(&imx415->client->dev, "imx415 is not streaming, save hdr ae!\n");
 		return ret;
 	}
+
+	// 从 ae 参数中读取曝光时间和增益
 	l_exp_time = ae->long_exp_reg;
 	m_exp_time = ae->middle_exp_reg;
 	s_exp_time = ae->short_exp_reg;
@@ -1519,14 +1593,17 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		l_exp_time, m_exp_time, s_exp_time,
 		l_a_gain, m_a_gain, s_a_gain);
 
+	// 如果是 HDR_X2 模式，长曝光时间和增益等于中曝光时间和增益
 	if (imx415->cur_mode->hdr_mode == HDR_X2) {
 		l_a_gain = m_a_gain;
 		l_exp_time = m_exp_time;
 	}
 
+	// 开始组寄存器写入
 	ret = imx415_write_reg(client, IMX415_GROUP_HOLD_REG,
 		IMX415_REG_VALUE_08BIT, IMX415_GROUP_HOLD_START);
-	/* gain effect n+1 */
+
+	// 写入长帧和短帧的增益
 	ret |= imx415_write_reg(client, IMX415_LF_GAIN_REG_H,
 		IMX415_REG_VALUE_08BIT, IMX415_FETCH_GAIN_H(l_a_gain));
 	ret |= imx415_write_reg(client, IMX415_LF_GAIN_REG_L,
@@ -1536,32 +1613,33 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 	ret |= imx415_write_reg(client, IMX415_SF1_GAIN_REG_L,
 		IMX415_REG_VALUE_08BIT, IMX415_FETCH_GAIN_L(s_a_gain));
 
-	/* Restrictions
-	 *   FSC = 2 * VMAX and FSC should be 4n;
-	 *   exp_l = FSC - SHR0 + Toffset;
-	 *   exp_l should be even value;
+	/* 约束条件说明：
+	 *   FSC = 2 * VMAX，且 FSC 应为 4 的倍数；
+	 *   exp_l = FSC - SHR0 + Toffset；
+	 *   exp_l 应为偶数；
 	 *
-	 *   SHR0 = FSC - exp_l + Toffset;
-	 *   SHR0 <= (FSC -8);
-	 *   SHR0 >= RHS1 + 9;
-	 *   SHR0 should be 2n;
+	 *   SHR0 = FSC - exp_l + Toffset；
+	 *   SHR0 <= (FSC - 8)；
+	 *   SHR0 >= RHS1 + 9；
+	 *   SHR0 应为 2 的倍数；
 	 *
-	 *   exp_s = RHS1 - SHR1 + Toffset;
-	 *   exp_s should be even value;
+	 *   exp_s = RHS1 - SHR1 + Toffset；
+	 *   exp_s 应为偶数；
 	 *
-	 *   RHS1 < BRL * 2;
-	 *   RHS1 <= SHR0 - 9;
-	 *   RHS1 >= SHR1 + 8;
-	 *   SHR1 >= 9;
-	 *   RHS1(n+1) >= RHS1(n) + BRL * 2 -FSC + 2;
+	 *   RHS1 < BRL * 2；
+	 *   RHS1 <= SHR0 - 9；
+	 *   RHS1 >= SHR1 + 8；
+	 *   SHR1 >= 9；
+	 *   RHS1(n+1) >= RHS1(n) + BRL * 2 - FSC + 2；
 	 *
-	 *   SHR1 should be 2n+1 and RHS1 should be 4n+1;
+	 *   SHR1 应为 2n+1，RHS1 应为 4n+1；
 	 */
 
-	/* The HDR mode vts is double by default to workaround T-line */
+	// 计算帧同步周期（FSC），并对齐到 4 的倍数
 	fsc = imx415->cur_vts;
 	shr0 = fsc - l_exp_time;
 
+	// 根据分辨率计算 RHS1 的最大值和最小值
 	if (imx415->cur_mode->height == 2192) {
 		rhs1_max = min(RHS1_MAX_X2(BRL_ALL), ((shr0 - 9u) / 4 * 4 + 1));
 		rhs1_min = max(SHR1_MIN_X2 + 8u, rhs1_old + 2 * BRL_ALL - fsc + 2);
@@ -1570,10 +1648,13 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		rhs1_min = max(SHR1_MIN_X2 + 8u, rhs1_old + 2 * BRL_BINNING - fsc + 2);
 	}
 	rhs1_min = (rhs1_min + 3) / 4 * 4 + 1;
-	rhs1 = (SHR1_MIN_X2 + s_exp_time + 3) / 4 * 4 + 1;/* shall be 4n + 1 */
+	rhs1 = (SHR1_MIN_X2 + s_exp_time + 3) / 4 * 4 + 1; // RHS1 应为 4n+1
+
 	dev_dbg(&client->dev,
 		"line(%d) rhs1 %d, rhs1 min %d rhs1 max %d\n",
 		__LINE__, rhs1, rhs1_min, rhs1_max);
+
+	// 检查 RHS1 的范围
 	if (rhs1_max < rhs1_min) {
 		dev_err(&client->dev,
 			"The total exposure limit makes rhs1 max is %d,but old rhs1 limit makes rhs1 min is %d\n",
@@ -1581,13 +1662,14 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		return -EINVAL;
 	}
 	rhs1 = clamp(rhs1, rhs1_min, rhs1_max);
+
 	dev_dbg(&client->dev,
 		"line(%d) rhs1 %d, short time %d rhs1_old %d, rhs1_new %d\n",
 		__LINE__, rhs1, s_exp_time, rhs1_old, rhs1);
 
 	rhs1_old = rhs1;
 
-	/* shr1 = rhs1 - s_exp_time */
+	// 计算 SHR1（短帧曝光起始），SHR1 = RHS1 - s_exp_time
 	if (rhs1 - s_exp_time <= SHR1_MIN_X2) {
 		shr1 = SHR1_MIN_X2;
 		s_exp_time = rhs1 - shr1;
@@ -1595,6 +1677,7 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		shr1 = rhs1 - s_exp_time;
 	}
 
+	// 检查 SHR0 的范围
 	if (shr0 < rhs1 + 9)
 		shr0 = rhs1 + 9;
 	else if (shr0 > fsc - 8)
@@ -1606,7 +1689,8 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 	dev_dbg(&client->dev,
 		"l_exp_time=%d,s_exp_time=%d,shr0=%d,shr1=%d,rhs1=%d,l_a_gain=%d,s_a_gain=%d\n",
 		l_exp_time, s_exp_time, shr0, shr1, rhs1, l_a_gain, s_a_gain);
-	/* time effect n+2 */
+
+	// 写入短帧（SEF1）曝光 RHS1 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_RHS1_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1620,6 +1704,7 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_RHS1_H(rhs1));
 
+	// 写入短帧（SEF1）曝光 SHR1 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_SF1_EXPO_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1632,6 +1717,8 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		IMX415_SF1_EXPO_REG_H,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_EXP_H(shr1));
+
+	// 写入长帧（LF）曝光 SHR0 寄存器
 	ret |= imx415_write_reg(client,
 		IMX415_LF_EXPO_REG_L,
 		IMX415_REG_VALUE_08BIT,
@@ -1645,14 +1732,16 @@ static int imx415_set_hdrae(struct imx415 *imx415,
 		IMX415_REG_VALUE_08BIT,
 		IMX415_FETCH_EXP_H(shr0));
 
+	// 结束组寄存器写入
 	ret |= imx415_write_reg(client, IMX415_GROUP_HOLD_REG,
 		IMX415_REG_VALUE_08BIT, IMX415_GROUP_HOLD_END);
 	return ret;
 }
 
+// IMX415 的 IOCTL 处理函数
 static long imx415_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 {
-	struct imx415 *imx415 = to_imx415(sd);
+	struct imx415 *imx415 = to_imx415(sd); // 获取 imx415 设备结构体
 	struct rkmodule_hdr_cfg *hdr;
 	u32 i, h, w, stream;
 	long ret = 0;
@@ -1660,40 +1749,40 @@ static long imx415_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 	u64 pixel_rate = 0;
 
 	switch (cmd) {
-	case PREISP_CMD_SET_HDRAE_EXP:
-		if (imx415->cur_mode->hdr_mode == HDR_X2)
+	case PREISP_CMD_SET_HDRAE_EXP: // 设置 HDR 曝光参数
+		if (imx415->cur_mode->hdr_mode == HDR_X2) // 如果是 2 帧 HDR 模式
 			ret = imx415_set_hdrae(imx415, arg);
-		else if (imx415->cur_mode->hdr_mode == HDR_X3)
+		else if (imx415->cur_mode->hdr_mode == HDR_X3) // 如果是 3 帧 HDR 模式
 			ret = imx415_set_hdrae_3frame(imx415, arg);
 		break;
-	case RKMODULE_GET_MODULE_INFO:
+	case RKMODULE_GET_MODULE_INFO: // 获取模块信息
 		imx415_get_module_inf(imx415, (struct rkmodule_inf *)arg);
 		break;
-	case RKMODULE_GET_HDR_CFG:
+	case RKMODULE_GET_HDR_CFG: // 获取 HDR 配置
 		hdr = (struct rkmodule_hdr_cfg *)arg;
-		hdr->esp.mode = HDR_NORMAL_VC;
-		hdr->hdr_mode = imx415->cur_mode->hdr_mode;
+		hdr->esp.mode = HDR_NORMAL_VC; // 设置 HDR 模式为正常虚拟通道
+		hdr->hdr_mode = imx415->cur_mode->hdr_mode; // 获取当前 HDR 模式
 		break;
-	case RKMODULE_SET_HDR_CFG:
+	case RKMODULE_SET_HDR_CFG: // 设置 HDR 配置
 		hdr = (struct rkmodule_hdr_cfg *)arg;
-		w = imx415->cur_mode->width;
-		h = imx415->cur_mode->height;
-		for (i = 0; i < imx415->cfg_num; i++) {
+		w = imx415->cur_mode->width; // 获取当前模式的宽度
+		h = imx415->cur_mode->height; // 获取当前模式的高度
+		for (i = 0; i < imx415->cfg_num; i++) { // 遍历支持的模式
 			if (w == supported_modes[i].width &&
-			    h == supported_modes[i].height &&
-			    supported_modes[i].hdr_mode == hdr->hdr_mode) {
-				imx415_change_mode(imx415, &supported_modes[i]);
+				h == supported_modes[i].height &&
+				supported_modes[i].hdr_mode == hdr->hdr_mode) {
+				imx415_change_mode(imx415, &supported_modes[i]); // 切换到匹配的模式
 				break;
 			}
 		}
-		if (i == imx415->cfg_num) {
+		if (i == imx415->cfg_num) { // 如果未找到匹配的模式
 			dev_err(&imx415->client->dev,
 				"not find hdr mode:%d %dx%d config\n",
 				hdr->hdr_mode, w, h);
 			ret = -EINVAL;
 		} else {
 			mode = imx415->cur_mode;
-			if (imx415->streaming) {
+			if (imx415->streaming) { // 如果正在流式传输
 				ret = imx415_write_reg(imx415->client, IMX415_GROUP_HOLD_REG,
 					IMX415_REG_VALUE_08BIT, IMX415_GROUP_HOLD_START);
 
@@ -1704,36 +1793,35 @@ static long imx415_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 				if (ret)
 					return ret;
 			}
-			w = mode->hts_def - imx415->cur_mode->width;
-			h = mode->vts_def - mode->height;
-			__v4l2_ctrl_modify_range(imx415->hblank, w, w, 1, w);
+			w = mode->hts_def - imx415->cur_mode->width; // 计算水平空白
+			h = mode->vts_def - mode->height; // 计算垂直空白
+			__v4l2_ctrl_modify_range(imx415->hblank, w, w, 1, w); // 更新水平空白控制范围
 			__v4l2_ctrl_modify_range(imx415->vblank, h,
 				IMX415_VTS_MAX - mode->height,
-				1, h);
-			__v4l2_ctrl_s_ctrl(imx415->link_freq, mode->mipi_freq_idx);
+				1, h); // 更新垂直空白控制范围
+			__v4l2_ctrl_s_ctrl(imx415->link_freq, mode->mipi_freq_idx); // 设置链路频率
 			pixel_rate = (u32)link_freq_items[mode->mipi_freq_idx] / mode->bpp * 2 * IMX415_4LANES;
 			__v4l2_ctrl_s_ctrl_int64(imx415->pixel_rate,
-						 pixel_rate);
+						 pixel_rate); // 设置像素速率
 		}
 		break;
-	case RKMODULE_SET_QUICK_STREAM:
-
+	case RKMODULE_SET_QUICK_STREAM: // 快速切换流模式
 		stream = *((u32 *)arg);
 
-		if (stream)
+		if (stream) // 如果开启流模式
 			ret = imx415_write_reg(imx415->client, IMX415_REG_CTRL_MODE,
 				IMX415_REG_VALUE_08BIT, IMX415_MODE_STREAMING);
-		else
+		else // 关闭流模式
 			ret = imx415_write_reg(imx415->client, IMX415_REG_CTRL_MODE,
 				IMX415_REG_VALUE_08BIT, IMX415_MODE_SW_STANDBY);
 		break;
-	case RKMODULE_GET_SONY_BRL:
+	case RKMODULE_GET_SONY_BRL: // 获取 BRL（基本读取行数）
 		if (imx415->cur_mode->width == 3864 && imx415->cur_mode->height == 2192)
-			*((u32 *)arg) = BRL_ALL;
+			*((u32 *)arg) = BRL_ALL; // 全分辨率 BRL
 		else
-			*((u32 *)arg) = BRL_BINNING;
+			*((u32 *)arg) = BRL_BINNING; // 子采样 BRL
 		break;
-	default:
+	default: // 未知命令
 		ret = -ENOIOCTLCMD;
 		break;
 	}
@@ -1741,6 +1829,7 @@ static long imx415_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 	return ret;
 }
 
+// 兼容 32 位 IOCTL 处理函数
 #ifdef CONFIG_COMPAT
 static long imx415_compat_ioctl32(struct v4l2_subdev *sd,
 				  unsigned int cmd, unsigned long arg)
@@ -1850,11 +1939,12 @@ static long imx415_compat_ioctl32(struct v4l2_subdev *sd,
 }
 #endif
 
-
+// 启动图像流传输
 static int __imx415_start_stream(struct imx415 *imx415)
 {
 	int ret;
 
+	// 写入全局寄存器和当前模式寄存器
 	if (!imx415->is_thunderboot) {
 		ret = imx415_write_array(imx415->client, imx415->cur_mode->global_reg_list);
 		if (ret)
@@ -1865,6 +1955,7 @@ static int __imx415_start_stream(struct imx415 *imx415)
 	}
 
 	/* In case these controls are set before streaming */
+	// 应对在流式传输前设置的控制参数
 	ret = __v4l2_ctrl_handler_setup(&imx415->ctrl_handler);
 	if (ret)
 		return ret;
@@ -1881,6 +1972,7 @@ static int __imx415_start_stream(struct imx415 *imx415)
 				IMX415_REG_VALUE_08BIT, 0);
 }
 
+// 停止图像流传输
 static int __imx415_stop_stream(struct imx415 *imx415)
 {
 	imx415->has_init_exp = false;
@@ -1890,6 +1982,7 @@ static int __imx415_stop_stream(struct imx415 *imx415)
 				IMX415_REG_VALUE_08BIT, 1);
 }
 
+// 设置图像流传输状态
 static int imx415_s_stream(struct v4l2_subdev *sd, int on)
 {
 	struct imx415 *imx415 = to_imx415(sd);
@@ -1901,21 +1994,28 @@ static int imx415_s_stream(struct v4l2_subdev *sd, int on)
 	       imx415->cur_mode->hdr_mode, imx415->cur_mode->bpp);
 
 	mutex_lock(&imx415->mutex);
-	on = !!on;
+	on = !!on;	// 把 on 转换为布尔值
+	
+	// 如果当前流状态与请求的状态相同，则直接返回
 	if (on == imx415->streaming)
 		goto unlock_and_return;
 
+	// 根据请求的状态启动或停止图像流传输
 	if (on) {
+		// 如果处于快速启动模式且状态为NG，则关闭快速启动并上电
 		if (imx415->is_thunderboot && rkisp_tb_get_state() == RKISP_TB_NG) {
 			imx415->is_thunderboot = false;
 			__imx415_power_on(imx415);
 		}
+		
+		// 获取设备的运行时电源管理
 		ret = pm_runtime_get_sync(&client->dev);
 		if (ret < 0) {
-			pm_runtime_put_noidle(&client->dev);
+			pm_runtime_put_noidle(&client->dev);	// 释放电源管理引用
 			goto unlock_and_return;
 		}
 
+		// 启动图像流传输
 		ret = __imx415_start_stream(imx415);
 		if (ret) {
 			v4l2_err(sd, "start stream failed while write regs\n");
@@ -1935,6 +2035,7 @@ unlock_and_return:
 	return ret;
 }
 
+// 设置设备电源状态
 static int imx415_s_power(struct v4l2_subdev *sd, int on)
 {
 	struct imx415 *imx415 = to_imx415(sd);
@@ -1964,6 +2065,7 @@ unlock_and_return:
 	return ret;
 }
 
+// 设备上电函数
 int __imx415_power_on(struct imx415 *imx415)
 {
 	int ret;
@@ -1984,8 +2086,11 @@ int __imx415_power_on(struct imx415 *imx415)
 		dev_err(dev, "Failed to enable regulators\n");
 		goto err_pinctrl;
 	}
+
+	// 给电源和复位引脚上电
 	if (!IS_ERR(imx415->power_gpio))
 		gpiod_direction_output(imx415->power_gpio, 1);
+	
 	/* At least 500ns between power raising and XCLR */
 	/* fix power on timing if insmod this ko */
 	usleep_range(10 * 1000, 20 * 1000);
@@ -1994,6 +2099,7 @@ int __imx415_power_on(struct imx415 *imx415)
 
 	/* At least 1us between XCLR and clk */
 	/* fix power on timing if insmod this ko */
+	// 打开时钟
 	usleep_range(10 * 1000, 20 * 1000);
 	ret = clk_set_rate(imx415->xvclk, IMX415_XVCLK_FREQ_37M);
 	if (ret < 0)
@@ -2023,6 +2129,7 @@ err_pinctrl:
 	return ret;
 }
 
+// 设备断电函数
 static void __imx415_power_off(struct imx415 *imx415)
 {
 	int ret;
@@ -2051,6 +2158,7 @@ static void __imx415_power_off(struct imx415 *imx415)
 	regulator_bulk_disable(IMX415_NUM_SUPPLIES, imx415->supplies);
 }
 
+// 运行时恢复函数
 static int imx415_runtime_resume(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
@@ -2060,6 +2168,7 @@ static int imx415_runtime_resume(struct device *dev)
 	return __imx415_power_on(imx415);
 }
 
+// 运行时挂起函数
 static int imx415_runtime_suspend(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
@@ -2193,6 +2302,7 @@ static const struct v4l2_subdev_ops imx415_subdev_ops = {
 	.pad	= &imx415_pad_ops,
 };
 
+// 设置控制参数的回调函数
 static int imx415_set_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct imx415 *imx415 = container_of(ctrl->handler,
@@ -2317,6 +2427,7 @@ static const struct v4l2_ctrl_ops imx415_ctrl_ops = {
 	.s_ctrl = imx415_set_ctrl,
 };
 
+// 初始化控制参数
 static int imx415_initialize_controls(struct imx415 *imx415)
 {
 	const struct imx415_mode *mode;
