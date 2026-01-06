@@ -83,6 +83,8 @@
 # kernel/drivers/media/i2c/
 !kernel/drivers/media/i2c/
 /kernel/drivers/media/i2c/*
+# kernel/drivers/media/i2c/imx415.c
+!kernel/drivers/media/i2c/imx415.c
 # kernel/drivers/media/i2c/Kconfig
 !kernel/drivers/media/i2c/Kconfig
 # kernel/drivers/media/i2c/Makefile

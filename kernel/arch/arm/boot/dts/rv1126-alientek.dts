@@ -639,3 +639,8 @@
 
 };
 
+&pmu_io_domains {
+
+	vccio6-supply = <&vcc_3v3>;
+
+};
