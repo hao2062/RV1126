@@ -644,3 +644,54 @@
 	vccio6-supply = <&vcc_3v3>;
 
 };
+
+
+
+&mdio {
+	/* 用户确认 phy 地址为 3 */
+	/delete-node/ phy@0;
+
+	phy: phy@1 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x1>;
+		clocks = <&cru CLK_GMAC_ETHERNET_OUT>;
+	};
+};
+
+&gmac {
+	phy-mode = "rmii";
+	clock_in_out = "output";
+
+	snps,reset-gpio = <&gpio3 RK_PA0 GPIO_ACTIVE_LOW>;
+	snps,reset-active-low;
+	/* Reset time is 20ms, 100ms for rtl8211f */
+	snps,reset-delays-us = <0 20000 100000>;
+
+	clocks = <&cru CLK_GMAC_SRC>, <&cru CLK_GMAC_TX_RX>,
+		 <&cru CLK_GMAC_TX_RX>, <&cru CLK_GMAC_REF>,
+		 <&cru ACLK_GMAC>, <&cru PCLK_GMAC>,
+		 <&cru CLK_GMAC_TX_RX>, <&cru CLK_GMAC_PTPREF>,
+		 <&cru CLK_GMAC_ETHERNET_OUT>;
+	clock-names = "stmmaceth", "mac_clk_rx",
+		      "mac_clk_tx", "clk_mac_ref",
+		      "aclk_mac", "pclk_mac",
+		      "clk_mac_speed", "ptp_ref",
+		      "clk_mac_refout";
+
+	assigned-clocks = <&cru CLK_GMAC_SRC>, <&cru CLK_GMAC_TX_RX>, <&cru CLK_GMAC_ETHERNET_OUT>;
+	assigned-clock-parents = <&cru CLK_GMAC_SRC_M1>, <&cru RMII_MODE_CLK>;
+	assigned-clock-rates = <50000000>, <0>, <50000000>;
+
+	pinctrl-names = "default";
+    /* 用 RMII 对应的 pinctrl 组（rv1126-pinctrl.dtsi 中的 rmiim1_*）或 clkm*_out_ethernet */
+    pinctrl-0 = <&rmiim1_miim &rmiim1_bus2 &clkm1_out_ethernet>;
+	// pinctrl-0 = <&rgmiim1_miim &rgmiim1_bus2 &rgmiim1_bus4 &clkm1_out_ethernet>;
+
+    /* RMII 不需要 RGMII 的延时 */
+	/delete-property/ tx_delay;
+	/delete-property/ rx_delay;
+
+	phy-handle = <&phy>;
+	status = "okay";
+
+};
