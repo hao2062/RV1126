@@ -233,9 +233,9 @@
         rockchip,camera-module-name = "UHD099";
         rockchip,camera-module-lens-name = "NIR-E-2M-F1-hdr2";
         
-        // ir-cut = <&cam_ircut0>;
+        ir-cut = <&cam_ircut0>;
         // flash-leds = <&flash_ir>;
-        // lens-focus = <&ms41908_1>;
+        lens-focus = <&ms41908_1>;
         port {
             ucam_out1: endpoint {
                 remote-endpoint = <&mipi_in_ucam1>;
@@ -466,178 +466,178 @@
     };
 };
 
-// &spi1 {
-//     status = "okay";
-//     max-freq = <50000000>;
-//     pinctrl-names = "default", "high_speed","pic-gpio" ;
-//     assigned-clocks = <&pmucru CLK_SPI0>;
-//     assigned-clock-rates = <100000000>;
-//     pinctrl-0 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins   &focus_pic_gpio   &zoom1_pic_gpio &zoom2_pic_gpio &zoom3_pic_gpio &piris_pic_gpio>;//&pic_gpio需要设置为上拉，在pirctrl.dtsi中配置
-//     // pinctrl-0 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins   &focus_pic_gpio   &zoom1_pic_gpio >;//&pic_gpio需要设置为上拉，在pirctrl.dtsi中配置
-//     pinctrl-1 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins_hs>;
+&spi1 {
+    status = "okay";
+    max-freq = <50000000>;
+    pinctrl-names = "default", "high_speed","pic-gpio" ;
+    assigned-clocks = <&pmucru CLK_SPI0>;
+    assigned-clock-rates = <100000000>;
+    pinctrl-0 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins   &focus_pic_gpio   &zoom1_pic_gpio &zoom2_pic_gpio &zoom3_pic_gpio &piris_pic_gpio>;//&pic_gpio需要设置为上拉，在pirctrl.dtsi中配置
+    // pinctrl-0 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins   &focus_pic_gpio   &zoom1_pic_gpio >;//&pic_gpio需要设置为上拉，在pirctrl.dtsi中配置
+    pinctrl-1 = <&spi1m2_cs0 &spi1m2_cs1   &spi1m2_pins_hs>;
 	
-//     cs-gpios = <
-//         &gpio2 RK_PD4 GPIO_ACTIVE_LOW  
-//         &gpio3 RK_PA4 GPIO_ACTIVE_LOW
-//         &gpio3 RK_PA6 GPIO_ACTIVE_LOW
-//     >;
+    cs-gpios = <
+        &gpio2 RK_PD4 GPIO_ACTIVE_LOW  
+        &gpio3 RK_PA4 GPIO_ACTIVE_LOW
+        &gpio3 RK_PA6 GPIO_ACTIVE_LOW
+    >;
 
-//     // focus + zoom1 
-//     ms41908_1: ms41908_1@00 {
-//         // === Spi 设备配置 ===
-//         compatible = "ms41908_1,focus_zoom1";
-//         reg = <0>;
-//         spi-max-frequency = <8000000>;  // SPI 通讯速率
+    // focus + zoom1 
+    ms41908_1: ms41908_1@00 {
+        // === Spi 设备配置 ===
+        compatible = "ms41908_1,focus_zoom1";
+        reg = <0>;
+        spi-max-frequency = <8000000>;  // SPI 通讯速率
 
-//         rockchip,camera-module-index = <0>;
-//         rockchip,camera-module-facing="front";
+        rockchip,camera-module-index = <0>;
+        rockchip,camera-module-facing="front";
 
-//         bias-pull-up; 
+        bias-pull-up; 
 
-//         // === 管脚配置 ===       
-//         vd_fz-period-us = <10000>;
-//         vd_fz-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
-//         // reset-gpios=<&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
-//         // Focus IO
-//         focus_pic-gpios=<&gpio3 RK_PB7 GPIO_ACTIVE_HIGH>;
-//         focus_pie-gpios=<&gpio3 RK_PC0 GPIO_ACTIVE_HIGH>;
-//         // Zoom IO
-//         zoom_pic-gpios=<&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
-//         zoom_pie-gpios=<&gpio3 RK_PC2 GPIO_ACTIVE_HIGH>;
+        // === 管脚配置 ===       
+        vd_fz-period-us = <10000>;
+        vd_fz-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
+        // reset-gpios=<&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;
+        // Focus IO
+        focus_pic-gpios=<&gpio3 RK_PB7 GPIO_ACTIVE_HIGH>;
+        focus_pie-gpios=<&gpio3 RK_PC0 GPIO_ACTIVE_HIGH>;
+        // Zoom IO
+        zoom_pic-gpios=<&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
+        zoom_pie-gpios=<&gpio3 RK_PC2 GPIO_ACTIVE_HIGH>;
         
-//         // === focus 参数配置 ===
-//         use-focus;
-//         focus-used-pin = "cd";
-//         focus-backlash=<6>;
-//         focus-start-up-speed=<800>;
-//         focus-step-max=<3257>;  // 2803 | 2923 | 3257
-//         focus-ppw=<200>;
-//         focus-micro=<64>;
-//         focus-min-pos=<2405>;    //197 | 316  2405
-//         focus-max-pos=<474>;    // 474
-//         focus-reback-distance=<0>;
-//         // focus-dir-opposite;
-//         focus-1-2phase-excitation;
+        // === focus 参数配置 ===
+        use-focus;
+        focus-used-pin = "cd";
+        focus-backlash=<6>;
+        focus-start-up-speed=<800>;
+        focus-step-max=<3257>;  // 2803 | 2923 | 3257
+        focus-ppw=<200>;
+        focus-micro=<64>;
+        focus-min-pos=<2405>;    //197 | 316  2405
+        focus-max-pos=<474>;    // 474
+        focus-reback-distance=<0>;
+        // focus-dir-opposite;
+        focus-1-2phase-excitation;
 
-//         // === zoom 参数配置 ===
-//         use-zoom;
-//         zoom-used-pin = "ab";
-//         zoom-backlash=<3>;
-//         zoom-start-up-speed=<800>;
-//         zoom-step-max=<1755>;
-//         zoom-ppw=<200>;
-//         zoom-micro=<64>;
-//         zoom-min-pos=<1024>;
-//         zoom-max-pos=<731>;
-//         zoom-reback-distance=<0>;
-//         // zoom-dir-opposite;
-//         // zoom-1-2phase-excitation;
+        // === zoom 参数配置 ===
+        use-zoom;
+        zoom-used-pin = "ab";
+        zoom-backlash=<3>;
+        zoom-start-up-speed=<800>;
+        zoom-step-max=<1755>;
+        zoom-ppw=<200>;
+        zoom-micro=<64>;
+        zoom-min-pos=<1024>;
+        zoom-max-pos=<731>;
+        zoom-reback-distance=<0>;
+        // zoom-dir-opposite;
+        // zoom-1-2phase-excitation;
 
-//         // === piris 参数配置 ===
-//         use-p-iris;
-//         piris-used-pin = "ab";
-//         piris-backlash=<3>;
-//         piris-start-up-speed=<800>;
-//         piris-step-max=<100>;   // 1700
-//         piris-ppw=<200>;
-//         piris-micro=<64>;
-//         piris-min-pos=<4>;
-//         piris-max-pos=<46>;
-//         piris-reback-distance=<0>;
-//         // piris-dir-opposite;
-//         piris-1-2phase-excitation;
-//     };
+        // === piris 参数配置 ===
+        use-p-iris;
+        piris-used-pin = "ab";
+        piris-backlash=<3>;
+        piris-start-up-speed=<800>;
+        piris-step-max=<100>;   // 1700
+        piris-ppw=<200>;
+        piris-micro=<64>;
+        piris-min-pos=<4>;
+        piris-max-pos=<46>;
+        piris-reback-distance=<0>;
+        // piris-dir-opposite;
+        piris-1-2phase-excitation;
+    };
 
-//     // zoom2 + zoom3 
-//     ms41908_2: ms41908_2@01 {    // ms41908_2: ms41908_2@01 {
-//         // === Spi 设备配置 ===
-//         compatible = "ms41908_2,zoom2_zoom3";   // ms41908_2,zoom2_zoom3
-//         reg = <1>;
-//         spi-max-frequency = <8000000>;  // SPI 通讯速率
+    // zoom2 + zoom3 
+    ms41908_2: ms41908_2@01 {    // ms41908_2: ms41908_2@01 {
+        // === Spi 设备配置 ===
+        compatible = "ms41908_2,zoom2_zoom3";   // ms41908_2,zoom2_zoom3
+        reg = <1>;
+        spi-max-frequency = <8000000>;  // SPI 通讯速率
 
-//         rockchip,camera-module-index = <0>;
-//         rockchip,camera-module-facing="front";
+        rockchip,camera-module-index = <0>;
+        rockchip,camera-module-facing="front";
 
-//         bias-pull-up; 
+        bias-pull-up; 
 
-//         // === 管脚配置 ===       
-//         vd_fz-period-us = <10000>;
-//         vd_fz-gpios = <&gpio3 RK_PA5 GPIO_ACTIVE_HIGH>;
-//         // reset-gpios=<&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
-//         // Zoom2 IO
-//         zoom_pic-gpios=<&gpio3 RK_PB4 GPIO_ACTIVE_HIGH>;    
-//         zoom_pie-gpios=<&gpio3 RK_PB6 GPIO_ACTIVE_HIGH>;
-//         // Zoom3 IO
-//         zoom1_pic-gpios=<&gpio0 RK_PC2 GPIO_ACTIVE_HIGH>;
-//         zoom1_pie-gpios=<&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
+        // === 管脚配置 ===       
+        vd_fz-period-us = <10000>;
+        vd_fz-gpios = <&gpio3 RK_PA5 GPIO_ACTIVE_HIGH>;
+        // reset-gpios=<&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+        // Zoom2 IO
+        zoom_pic-gpios=<&gpio3 RK_PB4 GPIO_ACTIVE_HIGH>;    
+        zoom_pie-gpios=<&gpio3 RK_PB6 GPIO_ACTIVE_HIGH>;
+        // Zoom3 IO
+        zoom1_pic-gpios=<&gpio0 RK_PC2 GPIO_ACTIVE_HIGH>;
+        zoom1_pie-gpios=<&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
         
-//         // === zoom2 参数配置 ===
-//         use-zoom;
-//         zoom-used-pin = "ab";
-//         zoom-backlash=<3>;
-//         zoom-start-up-speed=<800>;
-//         zoom-step-max=<1757>;   // 1700
-//         zoom-ppw=<200>;
-//         zoom-micro=<64>;
-//         zoom-min-pos=<165>;
-//         zoom-max-pos=<1363>;
-//         zoom-reback-distance=<0>;
-//         // zoom-dir-opposite;
-//         zoom-1-2phase-excitation;
+        // === zoom2 参数配置 ===
+        use-zoom;
+        zoom-used-pin = "ab";
+        zoom-backlash=<3>;
+        zoom-start-up-speed=<800>;
+        zoom-step-max=<1757>;   // 1700
+        zoom-ppw=<200>;
+        zoom-micro=<64>;
+        zoom-min-pos=<165>;
+        zoom-max-pos=<1363>;
+        zoom-reback-distance=<0>;
+        // zoom-dir-opposite;
+        zoom-1-2phase-excitation;
 
-//         // === zoom3 参数配置 ===
-//         use-zoom1;
-//         zoom1-used-pin = "cd";
-//         zoom1-backlash=<3>;
-//         zoom1-start-up-speed=<800>;
-//         zoom1-step-max=<2448>;  // 2438
-//         zoom1-ppw=<200>;
-//         zoom1-micro=<64>;
-//         zoom1-min-pos=<491>;
-//         zoom1-max-pos=<1877>;
-//         zoom1-reback-distance=<0>;
-//         // zoom1-dir-opposite;
-//         zoom1-1-2phase-excitation;
-//     };
+        // === zoom3 参数配置 ===
+        use-zoom1;
+        zoom1-used-pin = "cd";
+        zoom1-backlash=<3>;
+        zoom1-start-up-speed=<800>;
+        zoom1-step-max=<2448>;  // 2438
+        zoom1-ppw=<200>;
+        zoom1-micro=<64>;
+        zoom1-min-pos=<491>;
+        zoom1-max-pos=<1877>;
+        zoom1-reback-distance=<0>;
+        // zoom1-dir-opposite;
+        zoom1-1-2phase-excitation;
+    };
 
-//     // piris
-//     ms41908_3: ms41908_3@01 {    
-//         // === Spi 设备配置 ===
-//         compatible = "ms41908_3,piris";   // P-Iris
-//         reg = <2>;
-//         spi-max-frequency = <8000000>;  // SPI 通讯速率
+    // piris
+    ms41908_3: ms41908_3@01 {    
+        // === Spi 设备配置 ===
+        compatible = "ms41908_3,piris";   // P-Iris
+        reg = <2>;
+        spi-max-frequency = <8000000>;  // SPI 通讯速率
 
-//         rockchip,camera-module-index = <0>;
-//         rockchip,camera-module-facing="front";
+        rockchip,camera-module-index = <0>;
+        rockchip,camera-module-facing="front";
 
-//         bias-pull-up; 
+        bias-pull-up; 
 
-//         // === 管脚配置 ===       
-//         vd_fz-period-us = <10000>;
-//         vd_fz-gpios = <&gpio3 RK_PA7 GPIO_ACTIVE_HIGH>;
-//         // reset-gpios=<&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
-//         // Piris IO
-//         // piris_pic-gpios=<&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;    
-//         piris_pic-gpios=<&gpio3 RK_PB5 GPIO_ACTIVE_HIGH>;  
-//         piris_pie-gpios=<&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
+        // === 管脚配置 ===       
+        vd_fz-period-us = <10000>;
+        vd_fz-gpios = <&gpio3 RK_PA7 GPIO_ACTIVE_HIGH>;
+        // reset-gpios=<&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+        // Piris IO
+        // piris_pic-gpios=<&gpio0 RK_PC3 GPIO_ACTIVE_HIGH>;    
+        piris_pic-gpios=<&gpio3 RK_PB5 GPIO_ACTIVE_HIGH>;  
+        piris_pie-gpios=<&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
 
-//         // === piris 参数配置 ===
-//         use-p-iris;
-//         piris-used-pin = "ab";
-//         piris-backlash=<3>;
-//         piris-start-up-speed=<800>;
-//         piris-step-max=<50>;   // 1700
-//         piris-ppw=<200>;
-//         piris-micro=<64>;
-//         piris-min-pos=<4>;
-//         piris-max-pos=<46>;
-//         piris-reback-distance=<0>;
-//         // piris-dir-opposite;
-//         piris-1-2phase-excitation;
+        // === piris 参数配置 ===
+        use-p-iris;
+        piris-used-pin = "ab";
+        piris-backlash=<3>;
+        piris-start-up-speed=<800>;
+        piris-step-max=<50>;   // 1700
+        piris-ppw=<200>;
+        piris-micro=<64>;
+        piris-min-pos=<4>;
+        piris-max-pos=<46>;
+        piris-reback-distance=<0>;
+        // piris-dir-opposite;
+        piris-1-2phase-excitation;
 
-//     };
+    };
 
-// };
+};
 
 &pmu_io_domains {
 
@@ -647,43 +647,16 @@
 
 
 
-&mdio {
-	/* 用户确认 phy 地址为 3 */
-	/delete-node/ phy@0;
+// &mdio {
+// 	/* 用户确认 phy 地址为 3 */
+// 	/delete-node/ phy@0;
 
-	phy: phy@1 {
-		compatible = "ethernet-phy-ieee802.3-c22";
-		reg = <0x1>;
-		clocks = <&cru CLK_GMAC_ETHERNET_OUT>;
-	};
-};
-
-//  //100M
-//  &gmac {
-//        phy-mode = "rmii";
-//        clock_in_out = "output";
-
-//        snps,reset-gpio = <&gpio3 RK_PA0 GPIO_ACTIVE_LOW>;
-//        snps,reset-active-low;
-//        /* Reset time is 20ms, 100ms for rtl8211f */
-//        snps,reset-delays-us = <0 50000 100000>;
-
-//        assigned-clocks = <&cru CLK_GMAC_SRC>, <&cru CLK_GMAC_TX_RX>;
-//        assigned-clock-parents = <&cru CLK_GMAC_SRC_M1>, <&cru RMII_MODE_CLK>;
-//        assigned-clock-rates = <0>, <50000000>;
-
-//        pinctrl-names = "default";
-//        pinctrl-0 = <&rmiim1_miim &rmiim1_bus2 &clkm1_out_ethernet>;
-
-//         tx_delay = <0x2a>;
-//         rx_delay = <0x1a>;
-
-//        phy-handle = <&phy>;
-//        status = "okay";
-//  }
-
-
-
+// 	phy: phy@1 {
+// 		compatible = "ethernet-phy-ieee802.3-c22";
+// 		reg = <0x1>;
+// 		clocks = <&cru CLK_GMAC_ETHERNET_OUT>;
+// 	};
+// };
 
 
 &gmac {
@@ -727,3 +700,26 @@
 	status = "okay";
 
 };
+
+// &gmac {
+//     phy-mode = "rmii";
+//     clock_in_out = "output";
+//     snps,reset-gpio = <&gpio3 RK_PC5 GPIO_ACTIVE_LOW>;
+//     snps,reset-active-low;
+//     // snps,reset-delays-us = <0 50000 50000>;
+//     snps,reset-delays-us = <0 20000 100000>;
+//     assigned-clocks = <&cru CLK_GMAC_SRC_M1>, <&cru CLK_GMAC_SRC>, <&cru CLK_GMAC_TX_RX>;
+//     assigned-clock-rates = <0>, <50000000>;
+//     assigned-clock-parents = <&cru CLK_GMAC_RGMII_M1>, <&cru CLK_GMAC_SRC_M1>,<&cru RMII_MODE_CLK>;
+//     pinctrl-names = "default";
+//     pinctrl-0 = <&rmiim1_miim &rgmiim1_rxer &rmiim1_bus2 &rgmiim1_mclkinout>;
+//     phy-handle = <&phy>;
+//     status = "okay";
+// };
+
+// &mdio {
+//     phy: phy@0 {
+//         compatible = "ethernet-phy-ieee802.3-c22";
+//         reg = <0x0>;
+//     };
+// };
